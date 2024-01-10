@@ -24,3 +24,7 @@ if __name__ == "__main__":
     client.connect_to_server()
     client.send_message("Hello, Server!")
     print(client.receive_message())
+    while True :
+        message = input("Enter message to send to server: ")
+        client.send_message(message)
+        print(client.receive_message())
