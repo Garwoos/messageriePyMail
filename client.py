@@ -9,6 +9,8 @@ class Client:
     def connect_to_server(self):
         try:
             self.client.connect((self.host, self.port))
+            identifier = input("Enter your identifier: ")  # Ask the user for an identifier
+            self.send_message(identifier)  # Send the identifier to the server
             print(f'Connected to server {self.host}:{self.port}')
         except socket.error as e:
             print(f'Failed to connect to server {self.host}:{self.port}. Error: {e}')
@@ -22,8 +24,6 @@ class Client:
 if __name__ == "__main__":
     client = Client()
     client.connect_to_server()
-    client.send_message("Hello, Server!")
-    print(client.receive_message())
     while True :
         message = input("Enter message to send to server: ")
         client.send_message(message)
