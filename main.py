@@ -2,6 +2,8 @@ from socket import AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR, socket
 from threading import Thread
 import random
 import logging
+import json
+import hashlib
 
 class Server:
     """
@@ -16,6 +18,7 @@ class Server:
         self.clients = {}
         self.identifiers = {}
         self.setup_logging()
+        self.users = self.load_users()
 
     def setup_logging(self):
         # Configurer le niveau de logging global
@@ -47,6 +50,28 @@ class Server:
             self.display_clients()
             Thread(target=self.single_client, args=(client, addr)).start()
 
+
+    def load_users(self):
+        try:
+            with open('users.json', 'r') as f:
+                users = json.load(f)
+        except FileNotFoundError:
+            users = {}
+        return users
+    
+
+    def hash_password(self, password):
+        return hashlib.sha256(password.encode()).hexdigest()
+    
+
+    def save_users(self):
+        with open('users.json', 'w') as f:
+            json.dump(self.users, f)
+
+
+    def register_user(self, username, password):
+        self.users[username] = self.hash_password(password)
+        self.save_users()
 
     def generate_identifier(self, client, addr):
         identifier = None
@@ -133,7 +158,7 @@ class Server:
         self.log_server_info("Connected clients:")
         for addr in self.clients:
             self.log_server_info(f'Client at {addr}')
-            
+
 
     def send_message_prompt(self):
         choice = input("Do you want to send a message to a specific client or to all clients? (Enter 'specific' or 'all'): ")
