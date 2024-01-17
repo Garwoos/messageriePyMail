@@ -1,14 +1,12 @@
 from socket import AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR, socket
 from threading import Thread
 import random
+import string
 import logging
 import json
 import hashlib
 
 class Server:
-    """
-    This class represents a TCP server.
-    """
     def __init__(self):
         self.host = ""
         self.port = 5555
@@ -20,15 +18,18 @@ class Server:
         self.setup_logging()
         self.users = self.load_users()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.server.close()
+
     def setup_logging(self):
-        # Configurer le niveau de logging global
         logging.basicConfig(level=logging.DEBUG)
 
-        # Créer un logger pour le serveur
         self.server_logger = logging.getLogger('server_logger')
-        self.server_logger.setLevel(logging.INFO)  # Niveau de logging pour le serveur
+        self.server_logger.setLevel(logging.INFO)
 
-        # Créer un gestionnaire de fichiers pour le serveur
         server_file_handler = logging.FileHandler('server_logs.log')
         server_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         server_file_handler.setFormatter(server_formatter)
@@ -43,6 +44,7 @@ class Server:
         while True:
             client, addr = self.server.accept()
             self.log_server_info(f'New client connected: {addr}')
+            client.send("You are now connected to the server.".encode('utf-8'))  # Send connection confirmation to client
             if addr in self.clients:
                 old_client = self.clients[addr]
                 old_client.close()
@@ -50,61 +52,65 @@ class Server:
             self.display_clients()
             Thread(target=self.single_client, args=(client, addr)).start()
 
-
     def load_users(self):
         try:
-            with open('users.json', 'r') as f:
-                users = json.load(f)
+            with open('users.json', 'r', encoding='utf-8') as f:
+                return json.load(f)
         except FileNotFoundError:
-            users = {}
-        return users
-    
+            return {}
 
     def hash_password(self, password):
         return hashlib.sha256(password.encode()).hexdigest()
-    
 
     def save_users(self):
-        with open('users.json', 'w') as f:
+        with open('users.json', 'w', encoding='utf-8') as f:
             json.dump(self.users, f)
-
 
     def register_user(self, username, password):
         self.users[username] = self.hash_password(password)
         self.save_users()
 
+    def check_password(self, username, password):
+        if username in self.users:
+            return self.users[username] == self.hash_password(password)
+        print(f"Utilisateur '{username}' non trouvé.")
+        return False
+
     def generate_identifier(self, client, addr):
+        users = self.load_users()
         identifier = None
-        while not identifier or identifier in self.clients.keys():
-            identifier = client.recv(1024).decode('utf-8') + '#'
-            for i in range(4):
-                identifier += f"{random.randint(0, 9)}"
-        self.clients[identifier] = client
-        self.identifiers[addr] = identifier
-        self.log_server_info(f"{identifier} has connected.")
+        while not identifier or identifier in self.clients:
+            identifier = random.choice(list(users.keys())) + '#'
+            for _ in range(4):
+                identifier += random.choice(string.ascii_letters + string.digits)
         return identifier
 
-
     def handle_client_messages(self, client, identifier):
-        while True:
-            try:
-                message = client.recv(1024).decode('utf-8')
-                if not message:
+            while True:
+                try:
+                    message = client.recv(1024).decode('utf-8')
+                    if not message:
+                        break
+                    if message.startswith("LOGIN "):
+                        username, password = message.split(" ")[1:]
+                        if self.check_password(username, password):
+                            self.send_message_to_client(identifier, "Login successful.")
+                        else:
+                            self.send_message_to_client(identifier, "Login failed.")
+                    elif message.startswith("REGISTER "):
+                        username, password = message.split(" ")[1:]
+                        self.register_user(username, password)
+                        self.send_message_to_client(identifier, "Registration successful.")
+                    else:
+                        self.log_server_info(f'Message from {identifier}: {message}')
+                        self.send_message_to_all_except_sender(identifier, message)
+                except ConnectionResetError:
+                    self.log_server_info(f"Failed to receive message from {identifier}. "
+                                        "Error: [WinError 10054] An existing connection was forcibly closed by the remote host")
                     break
-                self.log_server_info(f'Message from {identifier}: {message}')
-                self.send_message_to_all_except_sender(identifier, message)
-            except ConnectionResetError:
-                self.log_server_info(f"Failed to receive message from {identifier}. "
-                                     "Error: [WinError 10054] An existing connection was forcibly closed by the remote host")
-                break
-
-
+                
     def send_message_to_all_except_sender(self, sender_identifier, message):
-        for identifier, client in self.clients.items():
-            if identifier != sender_identifier:
-                client.send((f"{sender_identifier}: {message}").encode('utf-8'))
-
-
+        [client.send(f"{sender_identifier}: {message}".encode('utf-8')) for identifier, client in self.clients.items() if identifier != sender_identifier]
 
     def send_message_to_specific_client(self):
         identifier = input("Enter the identifier of the client to send a message to: ")
@@ -112,12 +118,9 @@ class Server:
         self.send_message_to_client(identifier, message)
 
     def single_client(self, client, addr):
-        """
-        This function handles a single client connection.
-        """
-        identifier = None
+        identifier = self.generate_identifier(client, addr)
+        self.send_message_to_client(identifier, "Do you want to (l)ogin or (r)egister?")
         try:
-            identifier = self.generate_identifier(client, addr)
             self.handle_client_messages(client, identifier)
         except ConnectionResetError:
             if identifier:
@@ -129,21 +132,18 @@ class Server:
 
 
     def send_message(self, message):
-        """
-        This method sends a message to all connected clients.
-        """
-        for identifier in self.clients:
-            self.clients[identifier].send(message.encode('utf-8'))
+        for identifier, client in self.clients.items():
+            try:
+                client.send(message.encode('utf-8'))
+            except ConnectionResetError:
+                self.log_server_info(f"Failed to send message to {identifier}. "
+                                    "Error: [WinError 10054] An existing connection was forcibly closed by the remote host")
 
     def send_message_to_client(self, identifier, message):
-        """
-        This method sends a message to a specific client.
-        """
         if identifier in self.clients:
             self.clients[identifier].send(message.encode('utf-8'))
         else:
             print(f"No client with identifier {identifier}")
-
 
     def disconnect_client(self, addr):
         identifier = self.identifiers[addr]
@@ -153,27 +153,13 @@ class Server:
         del self.identifiers[addr]
         self.display_clients()
 
-
     def display_clients(self):
         self.log_server_info("Connected clients:")
         for addr in self.clients:
             self.log_server_info(f'Client at {addr}')
-
-
-    def send_message_prompt(self):
-        choice = input("Do you want to send a message to a specific client or to all clients? (Enter 'specific' or 'all'): ")
-        if choice.lower() == 'specific':
-            self.send_message_to_specific_client()
-        elif choice.lower() == 'all':
-            message = input("Enter the message to send: ")
-            self.send_message(message)
-        else:
-            self.log_server_info("Invalid choice. Please enter 'specific' or 'all'.")
- 
-
-
+            
 if __name__ == "__main__":
-    server = Server()
-    server.start_server()
-    while True:
-        server.send_message_prompt()
+    with Server() as server:
+        server.start_server()
+        while True:
+            server.send_message_prompt()
