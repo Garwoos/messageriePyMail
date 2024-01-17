@@ -1,6 +1,7 @@
 from socket import AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR, socket
 from threading import Thread
 import random
+import logging
 
 class Server:
     """
@@ -13,59 +14,73 @@ class Server:
         self.server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         self.server.bind((self.host, self.port))
         self.clients = {}
-        self.identifiers = {}  # New dictionary to store identifiers
+        self.identifiers = {}
+        self.setup_logging()
+
+    def setup_logging(self):
+        # Configurer le niveau de logging global
+        logging.basicConfig(level=logging.DEBUG)
+
+        # Créer un logger pour le serveur
+        self.server_logger = logging.getLogger('server_logger')
+        self.server_logger.setLevel(logging.INFO)  # Niveau de logging pour le serveur
+
+        # Créer un gestionnaire de fichiers pour le serveur
+        server_file_handler = logging.FileHandler('server_logs.log')
+        server_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        server_file_handler.setFormatter(server_formatter)
+        self.server_logger.addHandler(server_file_handler)
+
+    def log_server_info(self, message):
+        self.server_logger.info(message)
 
     def start_server(self):
-        """
-        This method starts the server.
-        """
-        self.server.listen(15)  # the maximum queued connections
-        print("Waiting for connection...\n")
+        self.server.listen(15)
+        self.log_server_info("Server started and waiting for connections.")
         while True:
             client, addr = self.server.accept()
-            print(f'A client has connected {addr}\n')
+            self.log_server_info(f'New client connected: {addr}')
             if addr in self.clients:
                 old_client = self.clients[addr]
                 old_client.close()
-            self.clients[addr] = client  # Add the client to the clients dictionary
-            self.display_clients()  # Display the updated list of clients
-            Thread(target=self.single_client, args=(client, addr)).start()  # Pass the address to single_client
+            self.clients[addr] = client
+            self.display_clients()
+            Thread(target=self.single_client, args=(client, addr)).start()
+
 
     def generate_identifier(self, client, addr):
-        """
-        This function generates a unique identifier for a client.
-        """
         identifier = None
         while not identifier or identifier in self.clients.keys():
             identifier = client.recv(1024).decode('utf-8') + '#'
             for i in range(4):
-                identifier += f"{random.randint(0,9)}"
-        self.clients[identifier] = client  # Store the client with the identifier as the key
-        self.identifiers[addr] = identifier  # Add the address to the identifiers dictionary
-        print(identifier + " has connected\n")
+                identifier += f"{random.randint(0, 9)}"
+        self.clients[identifier] = client
+        self.identifiers[addr] = identifier
+        self.log_server_info(f"{identifier} has connected.")
         return identifier
 
 
     def handle_client_messages(self, client, identifier):
-        """
-        This function handles the messages from a client.
-        """
         while True:
             try:
                 message = client.recv(1024).decode('utf-8')
                 if not message:
                     break
-                print(f'Message from {identifier}: {message}')
+                self.log_server_info(f'Message from {identifier}: {message}')
                 self.send_message_to_all_except_sender(identifier, message)
             except ConnectionResetError:
-                print(f"Failed to receive message. Error: [WinError 10054] An existing connection was forcibly closed by the remote host")
+                self.log_server_info(f"Failed to receive message from {identifier}. "
+                                     "Error: [WinError 10054] An existing connection was forcibly closed by the remote host")
                 break
 
+
     def send_message_to_all_except_sender(self, sender_identifier, message):
-        for identifier, client in self.clients.items():  # Now iterating over identifiers, not addresses
-            if identifier != sender_identifier:  # Check the identifier directly
-                client.send((f"{sender_identifier}: {message}").encode('utf-8'))  # Call send on the socket object
-    
+        for identifier, client in self.clients.items():
+            if identifier != sender_identifier:
+                client.send((f"{sender_identifier}: {message}").encode('utf-8'))
+
+
+
     def send_message_to_specific_client(self):
         identifier = input("Enter the identifier of the client to send a message to: ")
         message = input("Enter the message to send: ")
@@ -104,24 +119,21 @@ class Server:
         else:
             print(f"No client with identifier {identifier}")
 
+
     def disconnect_client(self, addr):
-        """
-        This method disconnects a client and updates the list of clients.
-        """
         identifier = self.identifiers[addr]
-        print(f'\nClient {identifier} has disconnected')  # Display the identifier of the disconnected client
-        self.send_message(f"Client {identifier} has disconnected\n")  # Send a message to all connected clients
-        del self.clients[identifier]  # Remove the client from the clients dictionary
-        del self.identifiers[addr]  # Remove the address from the identifiers dictionary
-        self.display_clients()  # Display the updated list of clients
+        self.log_server_info(f'{identifier} has disconnected.')
+        self.send_message(f"Client {identifier} has disconnected.")
+        del self.clients[identifier]
+        del self.identifiers[addr]
+        self.display_clients()
+
 
     def display_clients(self):
-        """
-        This method displays the list of connected clients.
-        """
-        print("Connected clients:")
+        self.log_server_info("Connected clients:")
         for addr in self.clients:
-            print(f'Client at {addr}\n')
+            self.log_server_info(f'Client at {addr}')
+            
 
     def send_message_prompt(self):
         choice = input("Do you want to send a message to a specific client or to all clients? (Enter 'specific' or 'all'): ")
@@ -131,8 +143,8 @@ class Server:
             message = input("Enter the message to send: ")
             self.send_message(message)
         else:
-            print("Invalid choice. Please enter 'specific' or 'all'.")
-        
+            self.log_server_info("Invalid choice. Please enter 'specific' or 'all'.")
+ 
 
 
 if __name__ == "__main__":
