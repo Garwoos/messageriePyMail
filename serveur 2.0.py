@@ -75,7 +75,7 @@ def handle_client(client_socket):
 
 
 # Function to store every ip address and port number of the clients connected to the server
-def store_ipaddr_portnum_connected(client_socket, addr, date):
+def store_ipaddr_portnum_connected(addr):
     # Initialiser ipconnected en chargeant le fichier JSON s'il existe
     if os.path.exists('ipconnected.json'):
         try:
@@ -110,9 +110,36 @@ def store_ipaddr_portnum_connected(client_socket, addr, date):
 
     return True
 
+def store_message_user(message, username):
+    if os.path.exists('message_user.json'):
+        try:
+            with open('message_user.json', 'r') as file:
+                message_user_dict = json.load(file)
+        except json.JSONDecodeError:
+            print("Warning: The 'message_user.json' file is malformed. Resetting to an empty dictionary.")
+            message_user_dict = {}
+    else:
+        message_user_dict = {}
+
+    current_time = datetime.now().strftime('%Y-%m-%d.%H:%M:%S')  # Get the current time with reduced precision
+
+    if username in message_user_dict:
+        message_user_dict[username].append({"message": message, "time": current_time})
+    else:
+        message_user_dict[username] = [{"message": message, "time": current_time}]
+
+    try:
+        with open('message_user.json', 'w') as file:
+            json.dump(message_user_dict, file)
+    except Exception as e:
+        print(f"Error: Unable to write to the 'message_user.json' file. Error details: {str(e)}")
+        return False
+
+    return True
+
 
 # Function to create a new account
-def create_account(username, password):
+def register(username, password):
     """
     Function to create a new account. Stores the username and password in a JSON file.
 
@@ -143,10 +170,10 @@ def create_account(username, password):
         return False
 
     users[username] = password
-
+    time = datetime.now()
     try:
         with open('users.json', 'w') as users_file:
-            json.dump(users, users_file)
+            json.dump(users, users_file,time)
 
     except OSError:
         print("Error: Unable to write to the 'users.json' file.")
@@ -183,18 +210,19 @@ def login(username, password):
     return True
 
 
+
 def main():
     """
     The main function that starts the server and accepts connections from clients.
     """
     with Server() as server:
         while True:
-            if login("test", "test"):
-                print("Login successful")
+            if True:
+                store_message_user("tfk", "ayo")
             # Accept a connection from the client
             client_socket, addr = server.server.accept()
             print(f'Connection established with {addr}')
-            store_ipaddr_portnum_connected(client_socket, addr, datetime.now())
+            store_ipaddr_portnum_connected(addr)
             # Read the message from the client
             message = client_socket.recv(1024).decode('utf-8')
             print(f'Message received: {message}')
