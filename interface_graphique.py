@@ -4,19 +4,19 @@ class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("my app")
         self.geometry("1600x900")
         self.minsize(400, 220)
+        self.maxsize(1920, 1080)
         self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=0)
+        self.grid_columnconfigure(1, weight=1)
 
         user = [f"User {i}" for i in range(1, 11)]
 
         self.radiobutton_frame = MyScrollableRadiobuttonFrame(self, "Message", values=user)
-        self.radiobutton_frame.grid(row=0, column=0, padx=(0, 10), pady=(10, 0), sticky="nsw")
+        self.radiobutton_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsw")
 
-        self.textbox_frame = MyScrollableTextBox(self)
-        self.textbox_frame.grid(row=0, column=6, padx=(10),columnspan=5, pady=(10), sticky="nsew")
+        self.textbox_frame = MyTextBox(self)
+        self.textbox_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
 
 class MyScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
     def __init__(self, master, title, values):
@@ -41,10 +41,23 @@ class MyScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
     def set(self, value):
         self.variable.set(value)
 
-class MyScrollableTextBox(customtkinter.CTkScrollableFrame):
+class MyTextBox(customtkinter.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
 
         self.textbox = customtkinter.CTkTextbox(self, fg_color="gray30", corner_radius=6)
-        self.textbox.grid(row=0, column=0, padx=10, pady=(10), sticky="nsew")
+        self.textbox.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
+        # Disable the textbox so the user cannot edit it.
+        self.textbox.configure(state='disabled')
+
+    def print(self, text):
+        """
+        This method is used to print text to the textbox.
+
+        Parameters:
+        text (str): The text to be printed to the textbox.
+        """
+        self.textbox.configure(state='normal')
+        self.textbox.insert("end", text)
+        self.textbox.configure(state='disabled')
