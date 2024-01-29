@@ -7,17 +7,18 @@ class App(customtkinter.CTk):
         self.title("my app")
         self.geometry("1600x900")
         self.minsize(400, 220)
-        self.grid_columnconfigure((0, 1), weight=1)
         self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=0)
 
-        self.radiobutton_frame = MyRadiobuttonFrame(self, "Message", values=["option 1", "option 2"])
+        user = [f"User {i}" for i in range(1, 11)]
+
+        self.radiobutton_frame = MyScrollableRadiobuttonFrame(self, "Message", values=user)
         self.radiobutton_frame.grid(row=0, column=0, padx=(0, 10), pady=(10, 0), sticky="nsw")
 
-    def button_callback(self):
-        print("checkbox_frame:", self.checkbox_frame.get())
-        print("radiobutton_frame:", self.radiobutton_frame.get())
+        self.textbox_frame = MyScrollableTextBox(self)
+        self.textbox_frame.grid(row=0, column=6, padx=(10),columnspan=5, pady=(10), sticky="nsew")
 
-class MyRadiobuttonFrame(customtkinter.CTkFrame):
+class MyScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
     def __init__(self, master, title, values):
         super().__init__(master)
         self.grid_columnconfigure(0, weight=1)
@@ -40,29 +41,10 @@ class MyRadiobuttonFrame(customtkinter.CTkFrame):
     def set(self, value):
         self.variable.set(value)
 
-class MyCheckboxFrame(customtkinter.CTkFrame):
-    def __init__(self, master, title, values):
+class MyScrollableTextBox(customtkinter.CTkScrollableFrame):
+    def __init__(self, master):
         super().__init__(master)
-        self.grid_columnconfigure(0, weight=1)
-        self.values = values
-        self.title = title
-        self.checkboxes = []
 
-        self.title = customtkinter.CTkLabel(self, text=self.title, fg_color="gray30", corner_radius=6)
-        self.title.grid(row=0, column=0, padx=10, pady=(10, 0), sticky="ew")
+        self.textbox = customtkinter.CTkTextbox(self, fg_color="gray30", corner_radius=6)
+        self.textbox.grid(row=0, column=0, padx=10, pady=(10), sticky="nsew")
 
-        for i, value in enumerate(self.values):
-            checkbox = customtkinter.CTkCheckBox(self, text=value)
-            checkbox.grid(row=i+1, column=0, padx=10, pady=(10, 0), sticky="w")
-            self.checkboxes.append(checkbox)
-
-    def get(self):
-        checked_checkboxes = []
-        for checkbox in self.checkboxes:
-            if checkbox.get() == 1:
-                checked_checkboxes.append(checkbox.cget("text"))
-        return checked_checkboxes
-
-if __name__ == "__main__":
-    app = App()
-    app.mainloop()
