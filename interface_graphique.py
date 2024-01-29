@@ -10,9 +10,9 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
-        user = [f"User {i}" for i in range(1, 11)]
+        self.user = []
 
-        self.radiobutton_frame = MyScrollableRadiobuttonFrame(self, "Message", values=user)
+        self.radiobutton_frame = MyScrollableRadiobuttonFrame(self, "Message", values=self.user)
         self.radiobutton_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsw")
 
         self.textbox_frame = MyTextBox(self)
@@ -30,6 +30,18 @@ class MyScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
         self.title = customtkinter.CTkLabel(self, text=self.title, fg_color="gray30", corner_radius=6)
         self.title.grid(row=0, column=0, padx=10, pady=(10, 0), sticky="ew")
 
+        self.update(values)
+
+    def update(self, values):
+        # Supprimer les boutons radio existants
+        for radiobutton in self.radiobuttons:
+            radiobutton.destroy()
+        self.radiobuttons = []
+
+        # Mettre à jour la liste des utilisateurs
+        self.values = values
+
+        # Créer de nouveaux boutons radio pour chaque utilisateur
         for i, value in enumerate(self.values):
             radiobutton = customtkinter.CTkRadioButton(self, text=value, value=value, variable=self.variable)
             radiobutton.grid(row=i + 1, column=0, padx=10, pady=(10, 0), sticky="nsew")
