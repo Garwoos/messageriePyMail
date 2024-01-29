@@ -53,15 +53,14 @@ class MyScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
     def set(self, value):
         self.variable.set(value)
 
-class MyTextBox(customtkinter.CTkFrame):
+class MyTextBox(customtkinter.CTkTextbox):
     def __init__(self, master):
-        super().__init__(master)
-
-        self.textbox = customtkinter.CTkTextbox(self, fg_color="gray30", corner_radius=6)
-        self.textbox.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
-
+        super().__init__(master, fg_color="gray30", corner_radius=6, text_color="red", bg_color="gray90", border_color="gray30", border_width=1)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
         # Disable the textbox so the user cannot edit it.
-        self.textbox.configure(state='disabled')
+        self.configure(state='disabled')
+
 
     def print(self, text):
         """
@@ -70,6 +69,6 @@ class MyTextBox(customtkinter.CTkFrame):
         Parameters:
         text (str): The text to be printed to the textbox.
         """
-        self.textbox.configure(state='normal')
-        self.textbox.insert("end", text)
-        self.textbox.configure(state='disabled')
+        self.configure(state='normal')
+        self.insert('end', text + "\n")
+        self.configure(state='disabled')
