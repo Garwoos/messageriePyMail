@@ -2,6 +2,7 @@ from socket import AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR, socket
 import threading
 import json
 import os
+from datetime import datetime
 
 
 class Server:
@@ -39,6 +40,19 @@ class Server:
         """
         self.server.close()
 
+    def start_server(self):
+        """
+        Starts the server and accepts connections from clients.
+        """
+        while True:
+            # Accept a connection from the client
+            client_socket, addr = self.server.accept()
+            print(f'Connection established with {addr}')
+
+            # Create a new thread to handle the client
+            thread = threading.Thread(target=handle_client, args=(client_socket,))
+            thread.start()
+
 
 # Function to handle each client
 def handle_client(client_socket):
@@ -58,6 +72,43 @@ def handle_client(client_socket):
         print(f'Message received: {message}')
 
     client_socket.close()
+
+
+# Function to store every ip address and port number of the clients connected to the server
+def store_ipaddr_portnum_connected(client_socket, addr, date):
+    # Initialiser ipconnected en chargeant le fichier JSON s'il existe
+    if os.path.exists('ipconnected.json'):
+        try:
+            with open('ipconnected.json', 'r') as ipconnected_file:
+                ipconnected = json.load(ipconnected_file)
+        except json.JSONDecodeError:
+            print("Warning: The 'ipconnected.json' file is malformed. Resetting to an empty dictionary.")
+            ipconnected = {}
+    else:
+        ipconnected = {}
+
+    ip, port = addr  # Décomposer l'adresse en IP et port
+
+    # Obtenir la date et l'heure actuelles
+    now = datetime.now()
+    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+
+    # Si l'IP existe déjà, ajouter les nouvelles informations à la liste existante
+    # Sinon, créer une nouvelle liste pour cette IP
+    if ip in ipconnected:
+        ipconnected[ip].append({"port": port, "timestamp": timestamp})
+    else:
+        ipconnected[ip] = [{"port": port, "timestamp": timestamp}]
+
+    try:
+        with open('ipconnected.json', 'w') as ipconnected_file:
+            json.dump(ipconnected, ipconnected_file)
+
+    except Exception as e:
+        print("Error: Unable to write to the 'ipconnected.json' file.")
+        return False
+
+    return True
 
 
 # Function to create a new account
@@ -103,6 +154,34 @@ def create_account(username, password):
 
     return True
 
+def login(username, password):
+    """
+    Function to log in to an existing account. Checks if the username and password match.
+
+    Parameters:
+    username (str): The username for the account.
+    password (str): The password for the account.
+
+    Returns:
+    bool: True if the login was successful, False otherwise.
+    """
+    try:
+        with open('users.json', 'r') as users_file:
+            users = json.load(users_file)
+
+    except json.JSONDecodeError:
+        print("Error: The 'users.json' file is malformed.")
+        return False
+
+    except OSError:
+        print("Error: Unable to open the 'users.json' file.")
+        return False
+
+    if username not in users or users[username] != password:
+        return False
+
+    return True
+
 
 def main():
     """
@@ -110,13 +189,16 @@ def main():
     """
     with Server() as server:
         while True:
+            if login("test", "test"):
+                print("Login successful")
             # Accept a connection from the client
             client_socket, addr = server.server.accept()
             print(f'Connection established with {addr}')
-
+            store_ipaddr_portnum_connected(client_socket, addr, datetime.now())
             # Read the message from the client
             message = client_socket.recv(1024).decode('utf-8')
             print(f'Message received: {message}')
+
 
 
 if __name__ == "__main__":
