@@ -5,7 +5,20 @@ import os
 
 
 class Server:
+    """
+    This class represents a server that can accept connections from clients.
+
+    Attributes:
+    host (str): The host on which the server is running.
+    port (int): The port on which the server is listening.
+    server (socket): The socket object representing the server.
+    clients (dict): A dictionary to store connected clients.
+    """
+
     def __init__(self):
+        """
+        The constructor for Server class. Initializes the server socket and starts listening for connections.
+        """
         self.host = ""
         self.port = 5555
         self.server = socket(AF_INET, SOCK_STREAM)
@@ -15,29 +28,50 @@ class Server:
         self.clients = {}
 
     def __enter__(self):
+        """
+        Makes Server class compatible with 'with' statement. Returns the server instance.
+        """
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        """
+        Ensures the server socket is closed when exiting a 'with' statement.
+        """
         self.server.close()
 
 
-# Fonction pour gérer chaque client
+# Function to handle each client
 def handle_client(client_socket):
+    """
+    Function to handle communication with a client. Receives messages from the client and prints them.
+
+    Parameters:
+    client_socket (socket): The socket object representing the client connection.
+    """
     while True:
-        # Recevoir le message du client
+        # Receive the message from the client
         message = client_socket.recv(1024).decode('utf-8')
 
         if not message:
             break
 
-        print(f'Message reçu: {message}')
+        print(f'Message received: {message}')
 
     client_socket.close()
 
 
-# Fonction pour créer un nouveau compte
-
+# Function to create a new account
 def create_account(username, password):
+    """
+    Function to create a new account. Stores the username and password in a JSON file.
+
+    Parameters:
+    username (str): The username for the new account.
+    password (str): The password for the new account.
+
+    Returns:
+    bool: True if the account was created successfully, False otherwise.
+    """
     try:
         if not os.path.exists('users.json'):
             with open('users.json', 'w') as users_file:
@@ -47,11 +81,11 @@ def create_account(username, password):
             users = json.load(users_file)
 
     except json.JSONDecodeError:
-        print("Erreur : Le fichier 'users.json' est mal formé.")
+        print("Error: The 'users.json' file is malformed.")
         return False
 
     except OSError:
-        print("Erreur : Impossible d'ouvrir le fichier 'users.json'.")
+        print("Error: Unable to open the 'users.json' file.")
         return False
 
     if username in users:
@@ -64,23 +98,29 @@ def create_account(username, password):
             json.dump(users, users_file)
 
     except OSError:
-        print("Erreur : Impossible d'écrire dans le fichier 'users.json'.")
+        print("Error: Unable to write to the 'users.json' file.")
         return False
 
     return True
 
 
 def main():
+    """
+    The main function that starts the server and accepts connections from clients.
+    """
     with Server() as server:
         while True:
-            # Accepter une connexion du client
+            # Accept a connection from the client
             client_socket, addr = server.server.accept()
-            print(f'Connexion établie avec {addr}')
+            print(f'Connection established with {addr}')
 
-            # Lire le message du client
+            # Read the message from the client
             message = client_socket.recv(1024).decode('utf-8')
-            print(f'Message reçu: {message}')
+            print(f'Message received: {message}')
 
 
 if __name__ == "__main__":
+    """
+    The entry point for the script. Calls the main function.
+    """
     main()
