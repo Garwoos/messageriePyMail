@@ -43,6 +43,10 @@ class Server:
     def start_server(self):
         """
         Starts the server and accepts connections from clients.
+
+        Parameters:
+        host (str): The host on which the server is running.
+        port (int): The port on which the server is listening.
         """
         while True:
             # Accept a connection from the client
@@ -76,6 +80,15 @@ def handle_client(client_socket):
 
 # Function to store every ip address and port number of the clients connected to the server
 def store_ipaddr_portnum_connected(addr):
+    """
+    Function to store the IP address and port number of each client connected to the server in a JSON file.
+
+    Parameters:
+    addr (tuple): The IP address and port number of the client.
+
+    Returns:
+    bool: True if the IP address and port number were stored successfully, False otherwise.
+    """
     # Initialiser ipconnected en chargeant le fichier JSON s'il existe
     if os.path.exists('ipconnected.json'):
         try:
@@ -111,6 +124,16 @@ def store_ipaddr_portnum_connected(addr):
     return True
 
 def store_message_user(message, username):
+    """
+    Function to store the messages sent by each user in a JSON file.
+
+    Parameters:
+    message (str): The message sent by the user.
+    username (str): The username of the user.
+
+    Returns:
+    bool: True if the message was stored successfully, False otherwise.
+    """
     if os.path.exists('message_user.json'):
         try:
             with open('message_user.json', 'r') as file:
@@ -159,21 +182,26 @@ def register(username, password):
             users = json.load(users_file)
 
     except json.JSONDecodeError:
-        print("Error: The 'users.json' file is malformed.")
-        return False
+        print("Warning : The 'users.json' file is malformed. Resetting to an empty dictionary.")
+        users = {}
+
+
 
     except OSError:
         print("Error: Unable to open the 'users.json' file.")
         return False
 
     if username in users:
+        print(f"This username already exists. Please try username.")
         return False
 
-    users[username] = password
-    time = datetime.now()
+    time = datetime.now().strftime('%Y-%m-%d.%H:%M:%S')  # Get the current time with reduced precision
+    users[username] = {"password": password, "time": time}
+
+
     try:
         with open('users.json', 'w') as users_file:
-            json.dump(users, users_file,time)
+            json.dump(users, users_file)
 
     except OSError:
         print("Error: Unable to write to the 'users.json' file.")
@@ -218,7 +246,7 @@ def main():
     with Server() as server:
         while True:
             if True:
-                store_message_user("tfk", "ayo")
+                register("test", "password")
             # Accept a connection from the client
             client_socket, addr = server.server.accept()
             print(f'Connection established with {addr}')
