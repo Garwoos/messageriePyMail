@@ -58,6 +58,7 @@ class Server:
             thread = threading.Thread(target=handle_client, args=(client_socket,))
             thread.start()
 
+
 def check_version(self, version_user):
     """
     Function to check if the client version is compatible with the server version.
@@ -68,10 +69,12 @@ def check_version(self, version_user):
     Returns:
     bool: True if the client version is compatible with the server version, False otherwise.
     """
-    if self.version == version_user :
+    if self.version == version_user:
         return True
     else:
         return False
+
+
 # Function to handle each client
 def handle_client(client_socket):
     """
@@ -128,14 +131,113 @@ def store_ipaddr_portnum_connected(addr):
         ipconnected[ip] = [{"port": port, "timestamp": timestamp}]
 
     try:
-        with open('ipconnected.json', 'w') as ipconnected_file:
-            json.dump(ipconnected, ipconnected_file)
-
-    except Exception as e:
-        print("Error: Unable to write to the 'ipconnected.json' file.")
+        with open('message_user.json', 'w') as message_user_file:
+            json.dump(message_user_file, message_user_file)
+    except OSError as e:
+        print(f"Error: Unable to write to the 'message_user.json' file. {str(e)}")
         return False
 
     return True
+
+
+def create_group(group_name):
+    """
+    Function to create a new group. Stores the group name in a JSON file.
+
+    Parameters:
+    group_name (str): The name of the new group.
+
+    Returns:
+    bool: True if the group was created successfully, False otherwise.
+    """
+    try:
+        if not os.path.exists('groups.json'):
+            with open('groups.json', 'w') as groups_file:
+                json.dump({}, groups_file, indent=4)
+
+        with open('groups.json', 'r') as groups_file:
+            groups = json.load(groups_file)
+
+    except json.JSONDecodeError:
+        print("Warning: The 'groups.json' file is malformed. Resetting to an empty dictionary.")
+        groups = {}
+
+    except OSError:
+        print("Error: Unable to open the 'groups.json' file.")
+        return False
+
+    if group_name in groups:
+        print(f"This group already exists. Please try another group name.")
+        return False
+
+    groups[group_name] = {"members": []}
+
+    try:
+        with open('groups.json', 'w') as groups_file:
+            json.dump(groups, groups_file, indent=4)
+
+    except OSError:
+        print("Error: Unable to write to the 'groups.json' file.")
+        return False
+
+    return True
+
+
+def add_member_to_group(group_name, username):
+    """
+    Function to add a member to a group. Stores the member name in a JSON file.
+
+    Parameters:
+    group_name (str): The name of the group.
+    username (str): The name of the member.
+
+    Returns:
+    bool: True if the member was added successfully, False otherwise.
+    """
+    try:
+        with open('groups.json', 'r') as groups_file:
+            groups = json.load(groups_file)
+
+    except json.JSONDecodeError:
+        print("Error: The 'groups.json' file is malformed.")
+        return False
+
+    except OSError:
+        print("Error: Unable to open the 'groups.json' file.")
+        return False
+
+    if group_name not in groups:
+        print(f"This group does not exist. Please try another group name.")
+        return False
+
+    if username in groups[group_name]["members"]:
+        print(f"This member already exists. Please try another member name.")
+        return False
+
+    try:
+        with open('users.json', 'r') as users_file:
+            users = json.load(users_file)
+
+    except json.JSONDecodeError:
+        print("Error: The 'users.json' file is malformed.")
+        return False
+
+    if username not in users:
+        print(f"This username does not exist. Please try another username.")
+        return False
+
+    groups[group_name]["members"].append(username)
+
+    try:
+        with open('groups.json', 'w') as groups_file:
+            json.dump(groups, groups_file, indent=4)
+
+    except OSError:
+        print("Error: Unable to write to the 'groups.json' file.")
+        return False
+
+    return True
+
 
 def store_message_user(message, username):
     """
@@ -167,7 +269,7 @@ def store_message_user(message, username):
 
     try:
         with open('message_user.json', 'w') as file:
-            json.dump(message_user_dict, file)
+            json.dump(message_user_dict, file, indent=4)
     except Exception as e:
         print(f"Error: Unable to write to the 'message_user.json' file. Error details: {str(e)}")
         return False
@@ -190,7 +292,7 @@ def register(username, password):
     try:
         if not os.path.exists('users.json'):
             with open('users.json', 'w') as users_file:
-                json.dump({}, users_file)
+                json.dump({}, users_file, indent=4)
 
         with open('users.json', 'r') as users_file:
             users = json.load(users_file)
@@ -198,9 +300,6 @@ def register(username, password):
     except json.JSONDecodeError:
         print("Warning : The 'users.json' file is malformed. Resetting to an empty dictionary.")
         users = {}
-
-
-
     except OSError:
         print("Error: Unable to open the 'users.json' file.")
         return False
@@ -211,17 +310,16 @@ def register(username, password):
 
     time = datetime.now().strftime('%Y-%m-%d.%H:%M:%S')  # Get the current time with reduced precision
     users[username] = {"password": password, "time": time}
-
-
     try:
         with open('users.json', 'w') as users_file:
-            json.dump(users, users_file)
+            json.dump(users, users_file, indent=4)
 
     except OSError:
         print("Error: Unable to write to the 'users.json' file.")
         return False
 
     return True
+
 
 def login(username, password):
     """
@@ -252,7 +350,6 @@ def login(username, password):
     return True
 
 
-
 def main():
     """
     The main function that starts the server and accepts connections from clients.
@@ -260,7 +357,7 @@ def main():
     with Server() as server:
         while True:
             if True:
-                register("test", "password")
+                add_member_to_group("groupe1", "username")
             # Accept a connection from the client
             client_socket, addr = server.server.accept()
             print(f'Connection established with {addr}')
@@ -268,7 +365,6 @@ def main():
             # Read the message from the client
             message = client_socket.recv(1024).decode('utf-8')
             print(f'Message received: {message}')
-
 
 
 if __name__ == "__main__":
