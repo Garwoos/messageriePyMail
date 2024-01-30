@@ -27,6 +27,7 @@ class Server:
         self.server.bind((self.host, self.port))
         self.server.listen(100)
         self.clients = {}
+        self.version = "1.0"
 
     def __enter__(self):
         """
@@ -57,7 +58,20 @@ class Server:
             thread = threading.Thread(target=handle_client, args=(client_socket,))
             thread.start()
 
+def check_version(self, version_user):
+    """
+    Function to check if the client version is compatible with the server version.
 
+    Parameters:
+    version (str): The version of the client.
+
+    Returns:
+    bool: True if the client version is compatible with the server version, False otherwise.
+    """
+    if self.version == version_user :
+        return True
+    else:
+        return False
 # Function to handle each client
 def handle_client(client_socket):
     """
