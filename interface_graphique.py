@@ -1,34 +1,45 @@
 import customtkinter
 
 
-class connexion(customtkinter.CTk):
+class Connexion(customtkinter.CTk):
     def __init__(self, fg_color="gray30", text_color="#ffffff", border_color="gray50", border_width=5, corner_radius=6):
         super().__init__()
         self.geometry("400x220")
         self.minsize(400, 220)
 
+        self.maxsize(1920, 1080)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
         self.username_input = ""
         self.password_input = ""
 
         self.usernames = MyEntry(self, fg_color=fg_color, corner_radius=corner_radius, text_color=text_color,
                                  border_color=border_color, border_width=border_width)
-        self.usernames.grid(row=0, column=1, columnspan=4, padx=10, pady=10, sticky="nsew")
+        self.usernames.grid(row=0, column=0, columnspan=4, padx=10, pady=10)
 
         self.password = MyEntry(self, fg_color=fg_color, corner_radius=corner_radius, text_color=text_color,
-                                 border_color=border_color, border_width=border_width)
-        self.password.grid(row=1, column=1, columnspan=4, padx=10, pady=10, sticky="nsew")
+                                border_color=border_color, border_width=border_width)
+        self.password.grid(row=1, column=1, columnspan=4, padx=10, pady=10)
 
         self.entry_button_frame = MyConnexionButton(self, "Envoyer", self.usernames, self.password,
-                                                fg_color=fg_color, corner_radius=corner_radius, text_color=text_color,
-                                                border_color=border_color, border_width=border_width)
-        self.entry_button_frame.grid(row=1, column=5, padx=10, pady=10, sticky="nsew")
+                                                    fg_color=fg_color, corner_radius=corner_radius,
+                                                    text_color=text_color,
+                                                    border_color=border_color, border_width=border_width)
+        self.entry_button_frame.grid(row=1, column=5, padx=10, pady=10)
+
+        self.error_message = MyLabel(self, text="Error : None", fg_color=fg_color, corner_radius=corner_radius,
+                                     text_color=text_color)
+        self.error_message.grid(row=0, column=5, padx=10, pady=10)
 
     def get_user_input(self):
         return self.username_input, self.password_input
 
+    def set_error_message(self, message):
+        self.error_message.configure(text=f"Error : {message}")
+
 
 class App(customtkinter.CTk):
-    def __init__(self, fg_color="gray30", text_color="gray40", border_color="gray50", border_width=5, corner_radius=6):
+    def __init__(self, fg_color="gray30", text_color="#ffffff", border_color="gray50", border_width=5, corner_radius=6):
         super().__init__()
         self.geometry("1600x900")
         self.minsize(400, 220)
@@ -160,3 +171,8 @@ class MyConnexionButton(customtkinter.CTkButton):
         self.usernames.delete(0, 'end')
         self.master.password_input = password
         self.password.delete(0, 'end')
+
+
+class MyLabel(customtkinter.CTkLabel):
+    def __init__(self, master, text, fg_color, corner_radius, text_color):
+        super().__init__(master, text=text, fg_color=fg_color, corner_radius=corner_radius, text_color=text_color)
