@@ -520,6 +520,7 @@ def user_action(user_choice, client_socket, username, message):
     match user_choice:
 
         case "login":
+
             client_socket.sendall(login(username, message))
 
         case "register":
@@ -532,13 +533,13 @@ def user_action(user_choice, client_socket, username, message):
             add_member_to_group(message, username)
 
         case "send_message":
-            group_name = message.split("&_&&--@\\&")[0]
-            message = message.split("&_&&--@\\&")[1]
+            group_name = message.split("&_&&--@\&")[0]
+            message = message.split("&_&&--@\&")[1]
             store_message_user(message, username)
             store_message_group(username, message, group_name)
 
         case "get_new_message":
-            group_name = message.split("&_&&--@\\&")[0]
+            group_name = message.split("&_&&--@\&")[0]
             send_json_file(client_socket, group_name)
 
 
