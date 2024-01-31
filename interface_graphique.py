@@ -1,34 +1,42 @@
 import customtkinter
 
 
-class connexion(customtkinter.CTk):
+class Connexion(customtkinter.CTk):
     def __init__(self, fg_color="gray30", text_color="#ffffff", border_color="gray50", border_width=5, corner_radius=6):
         super().__init__()
-        self.geometry("400x220")
-        self.minsize(400, 220)
-
+        self.resizable(False, False)
         self.username_input = ""
         self.password_input = ""
 
         self.usernames = MyEntry(self, fg_color=fg_color, corner_radius=corner_radius, text_color=text_color,
                                  border_color=border_color, border_width=border_width)
-        self.usernames.grid(row=0, column=1, columnspan=4, padx=10, pady=10, sticky="nsew")
+        self.usernames.grid(row=0, column=0, padx=10, pady=10)
 
-        self.password = MyEntry(self, fg_color=fg_color, corner_radius=corner_radius, text_color=text_color,
-                                 border_color=border_color, border_width=border_width)
-        self.password.grid(row=1, column=1, columnspan=4, padx=10, pady=10, sticky="nsew")
+        self.password = MyPasswordEntry(self, fg_color=fg_color, corner_radius=corner_radius, text_color=text_color,
+                                        border_color=border_color, border_width=border_width, show='*')
+        self.password.grid(row=1, column=0, padx=10, pady=10)
 
-        self.entry_button_frame = MyConnexionButton(self, "Envoyer", self.usernames, self.password,
-                                                fg_color=fg_color, corner_radius=corner_radius, text_color=text_color,
-                                                border_color=border_color, border_width=border_width)
-        self.entry_button_frame.grid(row=1, column=5, padx=10, pady=10, sticky="nsew")
+        self.entry_button_frame = MyConnexionButton(self, "Connexion", self.usernames, self.password,
+                                                    fg_color=fg_color, corner_radius=corner_radius,
+                                                    text_color=text_color,
+                                                    border_color=border_color, border_width=border_width)
+        self.entry_button_frame.grid(row=2, column=0, padx=10, pady=10)
+
+        self.error_message = MyLabel(self, text="Error : None", fg_color="#ff0000", corner_radius=corner_radius,
+                                     text_color=text_color)
+        self.error_message.grid(row=0, column=1, padx=10, pady=10)
 
     def get_user_input(self):
-        return self.username_input, self.password_input
+        username_input, password_input = self.username_input, self.password_input
+        self.username_input, self.password_input = "", ""
+        return username_input, password_input
+
+    def set_error_message(self, message):
+        self.error_message.configure(text=f"Error : {message}")
 
 
 class App(customtkinter.CTk):
-    def __init__(self, fg_color="gray30", text_color="gray40", border_color="gray50", border_width=5, corner_radius=6):
+    def __init__(self, fg_color="gray30", text_color="#ffffff", border_color="gray50", border_width=5, corner_radius=6):
         super().__init__()
         self.geometry("1600x900")
         self.minsize(400, 220)
@@ -121,9 +129,35 @@ class MyEntry(customtkinter.CTkEntry):
     def __init__(self, master, text_color, fg_color, corner_radius, border_color, border_width):
         super().__init__(master, fg_color=fg_color, corner_radius=corner_radius, text_color=text_color,
                          border_color=border_color, border_width=border_width)
+        self.var = customtkinter.StringVar()
+        self['textvariable'] = self.var
+        self.bind('<KeyRelease>', self._update_var)
+
+    def _update_var(self, event):
+        self.var.set(self.get())
 
     def get_text(self):
-        return self.get()
+        print(f"Getting text: {self.var.get()}")
+        return self.var.get()
+
+
+class MyPasswordEntry(customtkinter.CTkEntry):
+    def __init__(self, master, text_color, fg_color, corner_radius, border_color, border_width, show=None):
+        super().__init__(master, fg_color=fg_color, corner_radius=corner_radius, text_color=text_color,
+                         border_color=border_color, border_width=border_width)
+        self.show = show
+        self.var = customtkinter.StringVar()
+        self['textvariable'] = self.var
+        if self.show is not None:
+            self.configure(show=self.show)
+            self.bind('<KeyRelease>', self._update_var)
+
+    def _update_var(self, event):
+        self.var.set(self.get())
+
+    def get_text(self):
+        print(f"Getting text: {self.var.get()}")
+        return self.var.get()
 
 
 class MyEntryButton(customtkinter.CTkButton):
@@ -153,10 +187,17 @@ class MyConnexionButton(customtkinter.CTkButton):
 
     def verify_correctness(self):
         username = self.usernames.get_text()
+        print(f"Username: {username}")
         password = self.password.get_text()
+        print(f"Password: {password}")
         if username == "":
             return
         self.master.username_input = username
         self.usernames.delete(0, 'end')
         self.master.password_input = password
         self.password.delete(0, 'end')
+
+
+class MyLabel(customtkinter.CTkLabel):
+    def __init__(self, master, text, fg_color, corner_radius, text_color):
+        super().__init__(master, text=text, fg_color=fg_color, corner_radius=corner_radius, text_color=text_color)
