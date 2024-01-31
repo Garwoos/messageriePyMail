@@ -107,9 +107,9 @@ def store_ipaddr_portnum_connected(addr):
     bool: True if the IP address and port number were stored successfully, False otherwise.
     """
     # Initialiser ipconnected en chargeant le fichier JSON s'il existe
-    if os.path.exists('ipconnected.json'):
+    if os.path.exists('ipconnected/ipconnected.json'):
         try:
-            with open('ipconnected.json', 'r') as ipconnected_file:
+            with open('ipconnected/ipconnected.json', 'r') as ipconnected_file:
                 ipconnected = json.load(ipconnected_file)
         except json.JSONDecodeError:
             print("Warning: The 'ipconnected.json' file is malformed. Resetting to an empty dictionary.")
@@ -131,13 +131,69 @@ def store_ipaddr_portnum_connected(addr):
         ipconnected[ip] = [{"port": port, "timestamp": timestamp}]
 
     try:
-        with open('message_user.json', 'w') as message_user_file:
-            json.dump(message_user_file, message_user_file)
+        with open('ipconnected/ipconnected.json', 'w') as ipconnected_file
+            json.dump(ipconnected, ipconnected_file, indent=4)
     except OSError as e:
-        print(f"Error: Unable to write to the 'message_user.json' file. {str(e)}")
+        print(f"Error: Unable to write to the 'ipconnected/ipconnected.json' file. {str(e)}")
         return False
 
     return True
+
+
+def search_data_in_group(group_name):
+    """
+    Function to search for data in a group. Returns the data if it exists.
+
+    Parameters:
+    group_name (str): The name of the group.
+
+    Returns:
+    dict: The data in the group if it exists, None otherwise.
+    """
+    try:
+        with open('message_group/groups.json', 'r') as groups_file:
+            groups = json.load(groups_file)
+
+    except json.JSONDecodeError:
+        print("Error: The 'groups.json' file is malformed.")
+        return None
+
+    except OSError:
+        print("Error: Unable to open the 'groups/groups.json' file.")
+        return None
+
+    if group_name not in groups:
+        print(f"This group does not exist. Please try another group name.")
+        return None
+
+    return groups[group_name]
+
+
+def send_json_file(client_socket, group_name):
+    """
+    Function to send a JSON file to the client.
+
+    Parameters:
+    client_socket (socket): The socket object representing the client connection.
+    file_path (str): The path to the JSON file.
+
+    Returns:
+    bool: True if the file was sent successfully, False otherwise.
+    """
+
+    # Get the data of the specific group
+    data = search_data_in_group(group_name)
+
+    # If the group data is None, then the group does not exist or an error occurred
+    if data is None:
+        print(f"Warning: Group '{group_name}' not found.")
+        return
+
+    # Convert the group data to a JSON string
+    data_str = json.dumps(data)
+
+    # Send the data over the socket
+    client_socket.sendall(data_str.encode())
 
 
 def create_group(group_name):
@@ -151,11 +207,11 @@ def create_group(group_name):
     bool: True if the group was created successfully, False otherwise.
     """
     try:
-        if not os.path.exists('groups.json'):
-            with open('groups.json', 'w') as groups_file:
+        if not os.path.exists('groups/groups.json'):
+            with open('groups/groups.json', 'w') as groups_file:
                 json.dump({}, groups_file, indent=4)
 
-        with open('groups.json', 'r') as groups_file:
+        with open('groups/groups.json', 'r') as groups_file:
             groups = json.load(groups_file)
 
     except json.JSONDecodeError:
@@ -163,7 +219,7 @@ def create_group(group_name):
         groups = {}
 
     except OSError:
-        print("Error: Unable to open the 'groups.json' file.")
+        print("Error: Unable to open the 'groups/groups.json' file.")
         return False
 
     if group_name in groups:
@@ -173,7 +229,7 @@ def create_group(group_name):
     groups[group_name] = {"members": []}
 
     try:
-        with open('groups.json', 'w') as groups_file:
+        with open('groups/groups.json', 'w') as groups_file:
             json.dump(groups, groups_file, indent=4)
 
     except OSError:
@@ -195,7 +251,7 @@ def add_member_to_group(group_name, username):
     bool: True if the member was added successfully, False otherwise.
     """
     try:
-        with open('groups.json', 'r') as groups_file:
+        with open('groups/groups.json', 'r') as groups_file:
             groups = json.load(groups_file)
 
     except json.JSONDecodeError:
@@ -203,7 +259,7 @@ def add_member_to_group(group_name, username):
         return False
 
     except OSError:
-        print("Error: Unable to open the 'groups.json' file.")
+        print("Error: Unable to open the 'groups/groups.json' file.")
         return False
 
     if group_name not in groups:
@@ -215,7 +271,7 @@ def add_member_to_group(group_name, username):
         return False
 
     try:
-        with open('users.json', 'r') as users_file:
+        with open('users/users.json', 'r') as users_file:
             users = json.load(users_file)
 
     except json.JSONDecodeError:
@@ -229,7 +285,7 @@ def add_member_to_group(group_name, username):
     groups[group_name]["members"].append(username)
 
     try:
-        with open('groups.json', 'w') as groups_file:
+        with open('groups/groups.json', 'w') as groups_file:
             json.dump(groups, groups_file, indent=4)
 
     except OSError:
@@ -250,12 +306,12 @@ def store_message_user(message, username):
     Returns:
     bool: True if the message was stored successfully, False otherwise.
     """
-    if os.path.exists('message_user.json'):
+    if os.path.exists('users/message_user.json'):
         try:
-            with open('message_user.json', 'r') as file:
+            with open('users/message_user.json', 'r') as file:
                 message_user_dict = json.load(file)
         except json.JSONDecodeError:
-            print("Warning: The 'message_user.json' file is malformed. Resetting to an empty dictionary.")
+            print("Warning: The 'users/message_user.json' file is malformed. Resetting to an empty dictionary.")
             message_user_dict = {}
     else:
         message_user_dict = {}
@@ -268,10 +324,48 @@ def store_message_user(message, username):
         message_user_dict[username] = [{"message": message, "time": current_time}]
 
     try:
-        with open('message_user.json', 'w') as file:
+        with open('users/message_user.json', 'w') as file:
             json.dump(message_user_dict, file, indent=4)
     except Exception as e:
         print(f"Error: Unable to write to the 'message_user.json' file. Error details: {str(e)}")
+        return False
+
+    return True
+
+
+def store_message_group(user, message, group_name):
+    """
+    Function to store the messages sent by each group in a JSON file.
+
+    Parameters:
+    message (str): The message sent by the group.
+    group_name (str): The name of the group.
+
+    Returns:
+    bool: True if the message was stored successfully, False otherwise.
+    """
+    if os.path.exists('groups/message_group.json'):
+        try:
+            with open('groups/message_group.json', 'r') as file:
+                message_group_dict = json.load(file)
+        except json.JSONDecodeError:
+            print("Warning: The 'groups/message_group.json' file is malformed. Resetting to an empty dictionary.")
+            message_group_dict = {}
+    else:
+        message_group_dict = {}
+
+    current_time = datetime.now().strftime('%Y-%m-%d.%H:%M:%S')  # Get the current time with reduced precision
+
+    if group_name in message_group_dict:
+        message_group_dict[group_name].append({"user": user, "message": message, "time": current_time})
+    else:
+        message_group_dict[group_name] = [{"user": user, "message": message, "time": current_time}]
+
+    try:
+        with open('groups/message_group.json', 'w') as file:
+            json.dump(message_group_dict, file, indent=4)
+    except Exception as e:
+        print(f"Error: Unable to write to the 'message_group.json' file. Error details: {str(e)}")
         return False
 
     return True
@@ -290,18 +384,18 @@ def register(username, password):
     bool: True if the account was created successfully, False otherwise.
     """
     try:
-        if not os.path.exists('users.json'):
-            with open('users.json', 'w') as users_file:
+        if not os.path.exists('users/users.json'):
+            with open('users/users.json', 'w') as users_file:
                 json.dump({}, users_file, indent=4)
 
-        with open('users.json', 'r') as users_file:
+        with open('users/users.json', 'r') as users_file:
             users = json.load(users_file)
 
     except json.JSONDecodeError:
-        print("Warning : The 'users.json' file is malformed. Resetting to an empty dictionary.")
+        print("Warning : The 'users/users.json' file is malformed. Resetting to an empty dictionary.")
         users = {}
     except OSError:
-        print("Error: Unable to open the 'users.json' file.")
+        print("Error: Unable to open the 'users/users.json' file.")
         return False
 
     if username in users:
@@ -311,7 +405,7 @@ def register(username, password):
     time = datetime.now().strftime('%Y-%m-%d.%H:%M:%S')  # Get the current time with reduced precision
     users[username] = {"password": password, "time": time}
     try:
-        with open('users.json', 'w') as users_file:
+        with open('users/users.json', 'w') as users_file:
             json.dump(users, users_file, indent=4)
 
     except OSError:
@@ -333,15 +427,15 @@ def login(username, password):
     bool: True if the login was successful, False otherwise.
     """
     try:
-        with open('users.json', 'r') as users_file:
+        with open('users/users.json', 'r') as users_file:
             users = json.load(users_file)
 
     except json.JSONDecodeError:
-        print("Error: The 'users.json' file is malformed.")
+        print("Error: The 'users/users.json' file is malformed.")
         return False
 
     except OSError:
-        print("Error: Unable to open the 'users.json' file.")
+        print("Error: Unable to open the 'users/users.json' file.")
         return False
 
     if username not in users or users[username] != password:
@@ -356,15 +450,11 @@ def main():
     """
     with Server() as server:
         while True:
-            if True:
-                add_member_to_group("groupe1", "username")
             # Accept a connection from the client
             client_socket, addr = server.server.accept()
             print(f'Connection established with {addr}')
             store_ipaddr_portnum_connected(addr)
-            # Read the message from the client
-            message = client_socket.recv(1024).decode('utf-8')
-            print(f'Message received: {message}')
+            send_json_file(client_socket, "groupe1")
 
 
 if __name__ == "__main__":
