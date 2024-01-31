@@ -131,7 +131,7 @@ def store_ipaddr_portnum_connected(addr):
         ipconnected[ip] = [{"port": port, "timestamp": timestamp}]
 
     try:
-        with open('ipconnected/ipconnected.json', 'w') as ipconnected_file
+        with open('ipconnected/ipconnected.json', 'w') as ipconnected_file:
             json.dump(ipconnected, ipconnected_file, indent=4)
     except OSError as e:
         print(f"Error: Unable to write to the 'ipconnected/ipconnected.json' file. {str(e)}")
@@ -151,7 +151,7 @@ def search_data_in_group(group_name):
     dict: The data in the group if it exists, None otherwise.
     """
     try:
-        with open('message_group/groups.json', 'r') as groups_file:
+        with open('groups/groups.json', 'r') as groups_file:
             groups = json.load(groups_file)
 
     except json.JSONDecodeError:
@@ -169,6 +169,35 @@ def search_data_in_group(group_name):
     return groups[group_name]
 
 
+def search_message_group(group_name):
+    """
+    Function to search for messages in a group. Returns the messages if they exist.
+
+    Parameters:
+    group_name (str): The name of the group.
+
+    Returns:
+    dict: The messages in the group if they exist, None otherwise.
+    """
+    try:
+        with open('message_group/message_group.json', 'r') as message_group_file:
+            message_group = json.load(message_group_file)
+
+    except json.JSONDecodeError:
+        print("Error: The 'message_group.json' file is malformed.")
+        return None
+
+    except OSError:
+        print("Error: Unable to open the 'groups/message_group.json' file.")
+        return None
+
+    if group_name not in message_group:
+        print(f"This group does not exist. Please try another group name.")
+        return None
+
+    return message_group[group_name]
+
+
 def send_json_file(client_socket, group_name):
     """
     Function to send a JSON file to the client.
@@ -180,7 +209,6 @@ def send_json_file(client_socket, group_name):
     Returns:
     bool: True if the file was sent successfully, False otherwise.
     """
-
     # Get the data of the specific group
     data = search_data_in_group(group_name)
 
@@ -192,8 +220,19 @@ def send_json_file(client_socket, group_name):
     # Convert the group data to a JSON string
     data_str = json.dumps(data)
 
-    # Send the data over the socket
-    client_socket.sendall(data_str.encode())
+    # get the message of the specific group
+    message = search_message_group(group_name)
+
+    # Check if either data_str or message is None before sending
+    if data_str is not None:
+        client_socket.sendall(data_str.encode())
+    else:
+        print("Error: 'data_str' is None.")
+
+    if message is not None:
+        client_socket.sendall(message.encode())
+    else:
+        print("Error: 'message' is None.")
 
 
 def create_group(group_name):
@@ -255,7 +294,7 @@ def add_member_to_group(group_name, username):
             groups = json.load(groups_file)
 
     except json.JSONDecodeError:
-        print("Error: The 'groups.json' file is malformed.")
+        print("Error: The 'groups/groups.json' file is malformed.")
         return False
 
     except OSError:
@@ -442,6 +481,65 @@ def login(username, password):
         return False
 
     return True
+
+
+# clientsocket&_&&--@\&username&_&&--@\user_choice&_&&--@\message
+def cut_message(message):
+    """
+    Parameters:
+    message (str): The message sent by the user.
+
+    Returns:
+    str: The username.
+    str: The password.
+    str: The group name.
+    """
+    client_socket = message.split("&_&&--@\\&")[0]
+    username = message.split("&_&&--@\\&")[1]
+    user_choice = message.split("&_&&--@\\&")[2]
+    message = message.split("&_&&--@\\&")[3]
+
+    return client_socket, username, user_choice, message
+
+
+def user_action(user_choice, client_socket, username, message):
+    """
+    Function to choose between every data send by the client
+
+    Parameters:
+    user_choice (str): The choice of the user.
+    client_socket (socket): The socket object representing the client connection.
+    username (str): The username for the account.
+    password (str): The password for the account.
+    group_name (str): The name of the group.
+    message (str): The message sent by the user.
+
+    Returns:
+    bool: True if the choice was successful, False otherwise.
+    """
+    match user_choice:
+
+        case "login":
+            client_socket.sendall(login(username, message))
+
+        case "register":
+            client_socket.sendall(register(username, message))
+
+        case "create_group":
+            create_group(message)
+
+        case "add_member_to_group":
+            add_member_to_group(message, username)
+
+        case "send_message":
+            group_name = message.split("&_&&--@\\&")[0]
+            message = message.split("&_&&--@\\&")[1]
+            store_message_user(message, username)
+            store_message_group(username, message, group_name)
+
+        case "get_new_message":
+            group_name = message.split("&_&&--@\\&")[0]
+            send_json_file(client_socket, group_name)
 
 
 def main():
