@@ -44,20 +44,18 @@ class Server:
     def start_server(self):
         """
         Starts the server and accepts connections from clients.
-
-        Parameters:
-        host (str): The host on which the server is running.
-        port (int): The port on which the server is listening.
         """
         while True:
             # Accept a connection from the client
             client_socket, addr = self.server.accept()
             print(f'Connection established with {addr}')
 
-            # Create a new thread to handle the client
-            thread = threading.Thread(target=handle_client, args=(client_socket,))
-            thread.start()
+            # Add the client to the server's clients dictionary
+            self.clients[addr] = client_socket
 
+            # Create a new thread to handle the client
+            thread = threading.Thread(target=handle_client, args=(client_socket, self))
+            thread.start()
 
 def check_version(self, version_user):
     """
@@ -69,6 +67,8 @@ def check_version(self, version_user):
     Returns:
     bool: True if the client version is compatible with the server version, False otherwise.
     """
+    print(f"Server Version: {self.version}")
+    print(f"Client Version: {version_user}")
     if self.version == version_user:
         return True
     else:
@@ -76,23 +76,41 @@ def check_version(self, version_user):
 
 
 # Function to handle each client
-def handle_client(client_socket):
+def handle_client(client_socket, server):
     """
-    Function to handle communication with a client. Receives messages from the client and prints them.
+    Function to handle communication with a client. Receives messages from the client and processes them.
 
     Parameters:
     client_socket (socket): The socket object representing the client connection.
+    server (Server): The instance of the Server class.
     """
     while True:
-        # Receive the message from the client
-        message = client_socket.recv(1024).decode('utf-8')
+        try:
+            # Receive the message from the client
+            message = client_socket.recv(1024).decode('utf-8')
 
-        if not message:
+            if not message:
+                break
+
+            # Use cut_message to extract client_socket, username, user_choice, message_content
+            client_socket, username, user_choice, message_content = cut_message(message)
+
+            # Call user_action with the extracted parameters
+            user_action(client_socket, username, user_choice, message_content)
+
+
+        except ConnectionResetError:
+            print("Client disconnected.")
             break
 
-        print(f'Message received: {message}')
+    # Remove the client from the server's clients dictionary
+    for addr, sock in server.clients.items():
+        if sock == client_socket:
+            del server.clients[addr]
+            break
 
     client_socket.close()
+
 
 
 # Function to store every ip address and port number of the clients connected to the server
@@ -180,15 +198,15 @@ def search_message_group(group_name):
     dict: The messages in the group if they exist, None otherwise.
     """
     try:
-        with open('message_group/message_group.json', 'r') as message_group_file:
+        with open('groups/message_group.json', 'r') as message_group_file:
             message_group = json.load(message_group_file)
 
     except json.JSONDecodeError:
         print("Error: The 'message_group.json' file is malformed.")
         return None
 
-    except OSError:
-        print("Error: Unable to open the 'groups/message_group.json' file.")
+    except OSError as e:
+        print(f"Error: Unable to open the 'groups/message_group.json' file. {str(e)}")
         return None
 
     if group_name not in message_group:
@@ -230,7 +248,8 @@ def send_json_file(client_socket, group_name):
         print("Error: 'data_str' is None.")
 
     if message is not None:
-        client_socket.sendall(message.encode())
+        messages_str = json.dumps(message)
+        client_socket.sendall(messages_str.encode())
     else:
         print("Error: 'message' is None.")
 
@@ -502,25 +521,19 @@ def cut_message(message):
     return client_socket, username, user_choice, message
 
 
-def user_action(user_choice, client_socket, username, message):
+def user_action(client_socket, username, user_choice, message):
     """
-    Function to choose between every data send by the client
+    Function to choose between every data sent by the client.
 
     Parameters:
-    user_choice (str): The choice of the user.
-    client_socket (socket): The socket object representing the client connection.
-    username (str): The username for the account.
-    password (str): The password for the account.
-    group_name (str): The name of the group.
     message (str): The message sent by the user.
 
     Returns:
     bool: True if the choice was successful, False otherwise.
     """
+
     match user_choice:
-
         case "login":
-
             client_socket.sendall(login(username, message))
 
         case "register":
@@ -533,10 +546,9 @@ def user_action(user_choice, client_socket, username, message):
             add_member_to_group(message, username)
 
         case "send_message":
-            group_name = message.split("&_&&--@\&")[0]
-            message = message.split("&_&&--@\&")[1]
-            store_message_user(message, username)
-            store_message_group(username, message, group_name)
+            group_name, message_content = message.split("&_&&--@\&")
+            store_message_user(message_content, username)
+            store_message_group(username, message_content, group_name)
 
         case "get_new_message":
             group_name = message.split("&_&&--@\&")[0]
@@ -552,8 +564,16 @@ def main():
             # Accept a connection from the client
             client_socket, addr = server.server.accept()
             print(f'Connection established with {addr}')
-            store_ipaddr_portnum_connected(addr)
-            send_json_file(client_socket, "groupe1")
+
+            # Add the client to the server's clients dictionary
+            server.clients[addr] = client_socket
+
+            # Create a new thread to handle the client
+            thread = threading.Thread(target=handle_client, args=(client_socket, server))
+            thread.start()
+
+
+
 
 
 if __name__ == "__main__":
