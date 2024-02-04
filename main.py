@@ -1,8 +1,18 @@
 import interface_graphique
 
-users = ["user1", "user2", "user3", "user4", "user5", "user6", "user7", "user8"]
-identify = False
-identifiant = ("mael", "1234")
+users = ["self", "user1"]
+identify = True
+identifiant = ("a", "a")
+chanel = {}
+
+
+def charger_chanel():
+    global chanel
+    chanel = {"self": "self", "user1": "user1"}
+
+
+def get_user_chanel():
+    print(app.radiobutton_frame.get())
 
 
 def update_users():
@@ -28,4 +38,5 @@ if __name__ == '__main__':
         app.mainloop()
     if identify:
         app = interface_graphique.App()
+        update_users()
         app.mainloop()
