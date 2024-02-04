@@ -44,20 +44,18 @@ class Server:
     def start_server(self):
         """
         Starts the server and accepts connections from clients.
-
-        Parameters:
-        host (str): The host on which the server is running.
-        port (int): The port on which the server is listening.
         """
         while True:
             # Accept a connection from the client
             client_socket, addr = self.server.accept()
             print(f'Connection established with {addr}')
 
-            # Create a new thread to handle the client
-            thread = threading.Thread(target=handle_client, args=(client_socket,))
-            thread.start()
+            # Add the client to the server's clients dictionary
+            self.clients[addr] = client_socket
 
+            # Create a new thread to handle the client
+            thread = threading.Thread(target=handle_client, args=(client_socket, self))
+            thread.start()
 
 def check_version(self, version_user):
     """
@@ -78,12 +76,13 @@ def check_version(self, version_user):
 
 
 # Function to handle each client
-def handle_client(client_socket):
+def handle_client(client_socket, server):
     """
-    Function to handle communication with a client. Receives messages from the client and prints them.
+    Function to handle communication with a client. Receives messages from the client and processes them.
 
     Parameters:
     client_socket (socket): The socket object representing the client connection.
+    server (Server): The instance of the Server class.
     """
     while True:
         try:
@@ -93,12 +92,25 @@ def handle_client(client_socket):
             if not message:
                 break
 
-            print(f'Message received: {message}')
+            # Use cut_message to extract client_socket, username, user_choice, message_content
+            client_socket, username, user_choice, message_content = cut_message(message)
+
+            # Call user_action with the extracted parameters
+            user_action(client_socket, username, user_choice, message_content)
+
+
         except ConnectionResetError:
             print("Client disconnected.")
             break
 
+    # Remove the client from the server's clients dictionary
+    for addr, sock in server.clients.items():
+        if sock == client_socket:
+            del server.clients[addr]
+            break
+
     client_socket.close()
+
 
 
 # Function to store every ip address and port number of the clients connected to the server
@@ -509,25 +521,18 @@ def cut_message(message):
     return client_socket, username, user_choice, message
 
 
-def user_action(user_action):
+def user_action(client_socket, username, user_choice, message):
     """
-    Function to choose between every data send by the client
+    Function to choose between every data sent by the client.
 
     Parameters:
-    user_choice (str): The choice of the user.
-    client_socket (socket): The socket object representing the client connection.
-    username (str): The username for the account.
-    password (str): The password for the account.
-    group_name (str): The name of the group.
     message (str): The message sent by the user.
 
     Returns:
     bool: True if the choice was successful, False otherwise.
     """
 
-    client_socket, username, user_choice, message = user_action
     match user_choice:
-
         case "login":
             client_socket.sendall(login(username, message))
 
@@ -541,20 +546,15 @@ def user_action(user_action):
             add_member_to_group(message, username)
 
         case "send_message":
-            group_name = message.split("&_&&--@\&")[0]
-            message = message.split("&_&&--@\&")[1]
-            store_message_user(message, username)
-            store_message_group(username, message, group_name)
+            group_name, message_content = message.split("&_&&--@\&")
+            store_message_user(message_content, username)
+            store_message_group(username, message_content, group_name)
 
         case "get_new_message":
             group_name = message.split("&_&&--@\&")[0]
             send_json_file(client_socket, group_name)
 
-    def disconnect(self):
-        """
-        Function to disconnect the client from the server.
-        """
-        self.client.close()
+
 def main():
     """
     The main function that starts the server and accepts connections from clients.
@@ -564,31 +564,13 @@ def main():
             # Accept a connection from the client
             client_socket, addr = server.server.accept()
             print(f'Connection established with {addr}')
-            store_ipaddr_portnum_connected(addr)
 
-            # Check client version
-            client_version = client_socket.recv(1024).decode('utf-8')
-            if not check_version(server, client_version):
-                # If the version is not compatible, send the mismatch message
-                client_socket.sendall("The version of the client is not compatible with the server version.".encode('utf-8'))
-                client_socket.close()
-                continue
-
-            register("sample_user", "sample_password")
-
-            # Receive login information
-            user_actions = cut_message(client_socket.recv(1024).decode('utf-8'))
-            user_action(user_actions)
+            # Add the client to the server's clients dictionary
+            server.clients[addr] = client_socket
 
             # Create a new thread to handle the client
-            thread = threading.Thread(target=handle_client, args=(client_socket,))
+            thread = threading.Thread(target=handle_client, args=(client_socket, server))
             thread.start()
-
-            #receive message from the client sent to a group
-            print("receiving message from the client")
-            user_actions = cut_message(client_socket.recv(1024).decode('utf-8'))
-            user_action(user_actions)
-
 
 
 
