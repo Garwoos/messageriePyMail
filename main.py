@@ -2,8 +2,18 @@ import interface_graphique
 
 users = ["self", "user1"]
 identify = True
-identifiant = ("a", "a")
+identifiable = ("a", "a")
 chanel = {}
+last_message = ""
+
+
+def send_last_user_message():
+    global last_message
+    message = app.get_last_user_input()
+    if message != last_message:
+        last_message = message
+        print(message)
+    app.after(100, send_last_user_message)
 
 
 def charger_chanel():
@@ -12,18 +22,18 @@ def charger_chanel():
 
 
 def get_user_chanel():
-    print(app.radiobutton_frame.get())
+    print(app.channel_frame.get())
 
 
 def update_users():
     global users
-    app.radiobutton_frame.update(users)
+    app.channel_frame.update(users)
     app.after(1000, update_users)
 
 
 def user_connexion():
     username, password = app.get_user_input()
-    if (username, password) == identifiant:
+    if (username, password) == identifiable:
         global identify
         identify = True
         app.destroy()
@@ -39,4 +49,5 @@ if __name__ == '__main__':
     if identify:
         app = interface_graphique.App()
         update_users()
+        send_last_user_message()
         app.mainloop()
