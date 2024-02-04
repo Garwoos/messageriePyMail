@@ -82,10 +82,9 @@ class Client:
         Parameters:
             message (str): The message to send.
         """
-        data = f"{self.host}{self.port}&_&&--\&send_message&_&&--@\&{message}&_&&--@\&{group_name}"
+        data = f"{self.host}&{self.port}&_&&--@\&send_message&_&&--@\&{self.username}&_&&--@\&{group_name}&_&&--@\&{message}"
         try:
             self.client.sendall(data.encode('utf-8'))
-
         except error as e:
             print(f'Failed to send message. Error: {e}')
 
@@ -96,10 +95,9 @@ class Client:
         Parameters:
             message (str): The message to send.
         """
-        data = f"{self.host}&_&&--@\&{self.port}&_&&--@\&{group_name}"
+        data = f"{self.host}&{self.port}&_&&--@\&create_group&_&&--@\&{self.username}&_&&--@\&{group_name}"
         try:
             self.client.sendall(data.encode('utf-8'))
-
         except error as e:
             print(f'Failed to send message. Error: {e}')
 
@@ -110,8 +108,7 @@ class Client:
         while True:
             message = self.receive_message()
             if message:
-                print(message)
-
+                print(f"New message: {message}")
     def receive_message(self):
         """
         Receives a message from the server.
@@ -156,12 +153,35 @@ class Client:
         # to ensure that the server has processed the version and login messages
         time.sleep(1)
 
-        while True:
-            message = input("Enter a message:")
-            self.send_message_to_group(message, "group1")
-            if message.lower() == 'exit':
-                self.disconnect()
-                break
+        def main(self):
+            self.connect_to_server()
+            self.send_version()
+            time.sleep(0.5)
+            self.login_or_register()
+            self.start_receiving_messages()
+
+            # Add a small delay or synchronization point here
+            # to ensure that the server has processed the version and login messages
+            time.sleep(1)
+
+            while True:
+                user_choice = input("Choose an action (1: Send Message, 2: Create Group, 3: Exit): ")
+
+                if user_choice == '1':
+                    group_name = input("Enter the group name: ")
+                    message = input("Enter your message: ")
+                    self.send_message_to_group(message, group_name)
+
+                elif user_choice == '2':
+                    group_name = input("Enter the new group name: ")
+                    self.create_group(group_name)
+
+                elif user_choice == '3':
+                    self.disconnect()
+                    break
+
+                else:
+                    print("Invalid choice. Please enter 1, 2, or 3.")
 
 
 if __name__ == '__main__':
