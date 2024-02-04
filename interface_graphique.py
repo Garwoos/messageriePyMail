@@ -1,10 +1,12 @@
 import customtkinter
 
+
 class Connexion(customtkinter.CTk):
     """
     This class represents the login window of the application.
     It inherits from the customtkinter.CTk class.
     """
+
     def __init__(self, fg_color="gray30", text_color="#ffffff", border_color="gray50", border_width=5, corner_radius=6):
         """
         Initialize the Connexion window with username and password fields.
@@ -55,7 +57,8 @@ class App(customtkinter.CTk):
     This class represents the main window of the application.
     It inherits from the customtkinter.CTk class.
     """
-    def __init__(self, fg_color="gray30", text_color="#ffffff", border_color="gray50", border_width=5, corner_radius=6):
+
+    def __init__(self, fg_color="gray30", text_color="#ffffff", border_color="gray50", border_width=5, corner_radius=0):
         """
         Initialize the main window with a list of users and a text box for messages.
         """
@@ -71,9 +74,13 @@ class App(customtkinter.CTk):
         self.last_user_input = ""
 
         # Create a frame for the list of users
-        self.radiobutton_frame = MyScrollableRadiobuttonFrame(self, "Message", values=self.user, fg_color=fg_color,
+        self.channel_frame = MyScrollableRadiobuttonFrame(self, "Message", values=self.user, fg_color=fg_color,
                                                               text_color=text_color, corner_radius=corner_radius)
-        self.radiobutton_frame.grid(row=0, column=0, rowspan=1, padx=10, pady=10, sticky="nsw")
+        self.channel_frame.grid(row=0, column=0, rowspan=2, padx=10, pady=10, sticky="nsw")
+
+        self.user_frame = MyScrollableRadiobuttonFrame(self, "Utilisateurs", values=self.user, fg_color=fg_color,
+                                                                text_color=text_color, corner_radius=corner_radius)
+        self.user_frame.grid(row=0, column=7, rowspan=2, padx=10, pady=10, sticky="nsw")
 
         # Create a text box for messages
         self.textbox_frame = MyTextBox(self, fg_color=fg_color, corner_radius=corner_radius, text_color=text_color,
@@ -110,14 +117,14 @@ class MyScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
         text_color: The text color of the frame.
         corner_radius: The corner radius of the frame.
     """
+
     def __init__(self, master, title, values, fg_color, text_color, corner_radius):
-        super().__init__(master)
+        super().__init__(master, corner_radius=corner_radius)
         self.grid_columnconfigure(0, weight=1)
         self.values = values
         self.title = title
         self.radiobuttons = []
         self.variable = customtkinter.StringVar(value="")
-
 
         self.title = customtkinter.CTkLabel(self, text=self.title, fg_color=fg_color, corner_radius=corner_radius,
                                             text_color=text_color)
@@ -143,12 +150,12 @@ class MyScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
 
         # Create new radio buttons for each user
         for i, value in enumerate(self.values):
-            for i, value in enumerate(self.values):
-                radiobutton = customtkinter.CTkRadioButton(self, text=value, value=value, variable=self.variable,
-                                                           fg_color="gray30", text_color="#ffffff",
-                                                           border_color="gray50", corner_radius=6)  # change corner radius
-                radiobutton.grid(row=i + 1, column=0, padx=10, pady=(10, 0), sticky="nsew")
-                self.radiobuttons.append(radiobutton)
+            radiobutton = customtkinter.CTkRadioButton(self, text=value, value=value, variable=self.variable,
+                                                       fg_color="gray30", text_color="#ffffff",
+                                                       border_color="gray50",
+                                                       corner_radius=0)  # change corner radius
+            radiobutton.grid(row=i + 1, column=0, padx=10, pady=(10, 0), sticky="nsew")
+            self.radiobuttons.append(radiobutton)
 
     def get(self):
         """
