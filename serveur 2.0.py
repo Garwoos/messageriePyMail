@@ -69,6 +69,8 @@ def check_version(self, version_user):
     Returns:
     bool: True if the client version is compatible with the server version, False otherwise.
     """
+    print(f"Server Version: {self.version}")
+    print(f"Client Version: {version_user}")
     if self.version == version_user:
         return True
     else:
@@ -84,13 +86,17 @@ def handle_client(client_socket):
     client_socket (socket): The socket object representing the client connection.
     """
     while True:
-        # Receive the message from the client
-        message = client_socket.recv(1024).decode('utf-8')
+        try:
+            # Receive the message from the client
+            message = client_socket.recv(1024).decode('utf-8')
 
-        if not message:
+            if not message:
+                break
+
+            print(f'Message received: {message}')
+        except ConnectionResetError:
+            print("Client disconnected.")
             break
-
-        print(f'Message received: {message}')
 
     client_socket.close()
 
@@ -180,15 +186,15 @@ def search_message_group(group_name):
     dict: The messages in the group if they exist, None otherwise.
     """
     try:
-        with open('message_group/message_group.json', 'r') as message_group_file:
+        with open('groups/message_group.json', 'r') as message_group_file:
             message_group = json.load(message_group_file)
 
     except json.JSONDecodeError:
         print("Error: The 'message_group.json' file is malformed.")
         return None
 
-    except OSError:
-        print("Error: Unable to open the 'groups/message_group.json' file.")
+    except OSError as e:
+        print(f"Error: Unable to open the 'groups/message_group.json' file. {str(e)}")
         return None
 
     if group_name not in message_group:
@@ -230,7 +236,8 @@ def send_json_file(client_socket, group_name):
         print("Error: 'data_str' is None.")
 
     if message is not None:
-        client_socket.sendall(message.encode())
+        messages_str = json.dumps(message)
+        client_socket.sendall(messages_str.encode())
     else:
         print("Error: 'message' is None.")
 
@@ -502,7 +509,7 @@ def cut_message(message):
     return client_socket, username, user_choice, message
 
 
-def user_action(user_choice, client_socket, username, message):
+def user_action(user_action):
     """
     Function to choose between every data send by the client
 
@@ -517,10 +524,11 @@ def user_action(user_choice, client_socket, username, message):
     Returns:
     bool: True if the choice was successful, False otherwise.
     """
+
+    client_socket, username, user_choice, message = user_action
     match user_choice:
 
         case "login":
-
             client_socket.sendall(login(username, message))
 
         case "register":
@@ -542,7 +550,11 @@ def user_action(user_choice, client_socket, username, message):
             group_name = message.split("&_&&--@\&")[0]
             send_json_file(client_socket, group_name)
 
-
+    def disconnect(self):
+        """
+        Function to disconnect the client from the server.
+        """
+        self.client.close()
 def main():
     """
     The main function that starts the server and accepts connections from clients.
@@ -553,7 +565,33 @@ def main():
             client_socket, addr = server.server.accept()
             print(f'Connection established with {addr}')
             store_ipaddr_portnum_connected(addr)
-            send_json_file(client_socket, "groupe1")
+
+            # Check client version
+            client_version = client_socket.recv(1024).decode('utf-8')
+            if not check_version(server, client_version):
+                # If the version is not compatible, send the mismatch message
+                client_socket.sendall("The version of the client is not compatible with the server version.".encode('utf-8'))
+                client_socket.close()
+                continue
+
+            register("sample_user", "sample_password")
+
+            # Receive login information
+            user_actions = cut_message(client_socket.recv(1024).decode('utf-8'))
+            user_action(user_actions)
+
+            # Create a new thread to handle the client
+            thread = threading.Thread(target=handle_client, args=(client_socket,))
+            thread.start()
+
+            #receive message from the client sent to a group
+            print("receiving message from the client")
+            user_actions = cut_message(client_socket.recv(1024).decode('utf-8'))
+            user_action(user_actions)
+
+
+
+
 
 
 if __name__ == "__main__":
