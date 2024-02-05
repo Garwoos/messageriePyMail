@@ -81,7 +81,7 @@ def get_users():
         list: La liste des utilisateurs.
     """
     cursor.execute('''
-        SELECT username, admin
+        SELECT username, password, admin
         FROM users
     ''')
 
