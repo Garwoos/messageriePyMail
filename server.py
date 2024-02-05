@@ -3,9 +3,6 @@ from threading import Thread
 import time
 import data_base
 
-data_base.delete_table('users_identifier', 'users')
-data_base.creer_base_de_donnees('users_identifier', 'users', ['username TEXT', 'password TEXT'])
-
 
 class Server:
     def __init__(self, host='localhost', port=5555):
@@ -57,8 +54,6 @@ class Server:
 
     def login(self, client):
         data = client.recv(1024).decode('utf-8')
-        print(data.split(';'))
-        print(data_base.recuperer_donnees('users_identifier', 'users'))
         if (data.split(';')) in [list(item) for item in data_base.recuperer_donnees('users_identifier', 'users')]:
             print('User logged in')
             return True
@@ -70,7 +65,6 @@ class Server:
         client.send(message.encode('utf-8'))
 
 if __name__ == '__main__':
-    data_base.inserer_donnees('users_identifier', 'users', ['id', 'password'])
     server = Server()
     print(server.start_server())
     server.accept_connections()
