@@ -2,15 +2,12 @@ import tkinter as tk
 from tkinter import messagebox
 import time
 import threading
-import data_base
-import encrypter
 import client
 
 password = b'password'
 client = client.Client()
 
 connected = False
-
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -77,6 +74,8 @@ class Connexion(tk.Frame):
         self.connexion_button.grid(row=2, column=0, columnspan=2)
 
     def connect(self):
+        global connected
+        global app
         username = self.username_entry.get()
         password = self.password_entry.get()
 
@@ -84,17 +83,31 @@ class Connexion(tk.Frame):
             return
         message = client.login(username, password)
         print(message)
-        if message == 'True':
-            print('User logged in')
-            global connected
-            global app
+
+        if message.split(';') == ['True', 'admin']:
+            print('logged in as admin')
             connected = True
             self.destroy()
             app = Application(master=root)
             thread = threading.Thread(target=get_message)
             thread.start()
+
+        elif message.split(';') == ['True', 'user']:
+            print('logged in as user')
+            connected = True
+            self.destroy()
+            app = Application(master=root)
+            thread = threading.Thread(target=get_message)
+            thread.start()
+
         else:
             create_popup('Username or password incorrect')
+
+
+def on_closing():
+    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        root.destroy()
+        client.client.close()
 
 
 def create_popup(message):
@@ -112,6 +125,7 @@ def get_message():
 
 if __name__ == '__main__':
     root = tk.Tk()
+    root.protocol("WM_DELETE_WINDOW", on_closing)
     client.connect_to_server()
     if client.send_version().decode('utf-8') == 'True':
         print('Version sent')
@@ -122,4 +136,5 @@ if __name__ == '__main__':
         app.mainloop()
     if connected:
         app = Application(master=root)
+
         app.mainloop()

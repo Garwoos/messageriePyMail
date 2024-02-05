@@ -32,8 +32,12 @@ class Server:
             client.send(b'False')
             client.close()
         while True:
-            if login(client):
-                client.send(b'True')
+            data = login(client).split(';')
+            if data == ['True', 'admin']:
+                client.send(b'True;admin')
+                break
+            elif data == ['True', 'user']:
+                client.send(b'True;user')
                 break
             else:
                 client.send(b'False')
@@ -56,9 +60,13 @@ def login(client):
     data = client.recv(1024).decode('utf-8')
     print(data.split(';'))
     print([item for item in data_base.get_users()])
-    if data.split(';') in [list(item) for item in data_base.get_users()]:
-        print('User logged in')
-        return True
+    if data.split(';') in [list(item[:2]) for item in data_base.get_users()]:
+        if data_base.get_users()[[list(item[:2]) for item in data_base.get_users()].index(data.split(';'))][2] == 'True':
+            print('Admin logged in')
+            return f'True;admin'
+        else:
+            print('User logged in')
+            return f'True;user'
     else:
         print('Failed to log in')
         return False

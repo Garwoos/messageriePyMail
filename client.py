@@ -27,7 +27,7 @@ class Client:
 
     def login(self, username, password):
         try:
-            self.client.sendto(f"{username};{password};{0}".encode('utf-8'), (self.host, self.port))
+            self.client.sendto(f"{username};{password}".encode('utf-8'), (self.host, self.port))
             return self.client.recv(1024).decode('utf-8')
         except socket.error as e:
             return f'Failed to send message. Error: {e}'
