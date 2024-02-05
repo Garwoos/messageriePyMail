@@ -1,5 +1,6 @@
 import socket
 import time
+import threading
 
 
 class Client:
@@ -31,3 +32,14 @@ class Client:
         except socket.error as e:
             return f'Failed to send message. Error: {e}'
 
+    def send_message(self, message):
+        try:
+            self.client.sendto(f"{message}".encode('utf-8'), (self.host, self.port))
+        except socket.error as e:
+            return f'Failed to send message. Error: {e}'
+
+    def get_message(self):
+        try:
+            return self.client.recv(1024).decode('utf-8')
+        except socket.error as e:
+            return f'Failed to receive message. Error: {e}'

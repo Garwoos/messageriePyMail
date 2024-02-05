@@ -46,6 +46,7 @@ class Server:
             data = client.recv(1024).decode('utf-8')
             if data:
                 print(data)
+                self.send_message(client, 'Message received')
 
     def check_version(self, client):
         data = client.recv(1024).decode('utf-8')

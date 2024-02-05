@@ -1,7 +1,7 @@
-import os
 import tkinter as tk
 from tkinter import messagebox
-
+import time
+import threading
 import data_base
 import encrypter
 import client
@@ -39,6 +39,7 @@ class Application(tk.Frame):
         message = self.input.get()
         self.input.delete(0, tk.END)
         self.print_message(f"vous : {message}")
+        client.send_message(message)
         print('Message sent')
 
     def print_message(self, message):
@@ -90,12 +91,23 @@ class Connexion(tk.Frame):
             connected = True
             self.destroy()
             app = Application(master=root)
+            thread = threading.Thread(target=get_message)
+            thread.start()
         else:
             create_popup('Username or password incorrect')
 
 
 def create_popup(message):
     messagebox.showinfo('Error', message)
+
+
+def get_message():
+    while True:
+        data = client.get_message()
+        if data:
+            app.print_message(f"server : {data}")
+            time.sleep(1)
+
 
 
 if __name__ == '__main__':
