@@ -36,9 +36,9 @@ class Application(tk.Frame):
         self.button_label.grid(row=0, column=4)
 
     def send_message(self):
-        message = f"server : {self.input.get()}"
+        message = self.input.get()
         self.input.delete(0, tk.END)
-        self.print_message(message)
+        self.print_message(f"vous : {message}")
         print('Message sent')
 
     def print_message(self, message):
