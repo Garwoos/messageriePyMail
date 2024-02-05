@@ -1,0 +1,12 @@
+# requirements.txt
+
+# Version du langage
+python_version >= 3.6
+
+# Dépendances pour le client
+pycryptodome>=3.10.4
+pyqt5>=5.15.4
+pyqtwebengine>=5.15.4
+
+# Dépendances pour le serveur
+pycryptodome>=3.10.4
