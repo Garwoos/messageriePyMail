@@ -3,7 +3,7 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
 
-class Crypt:
+class Cryp:
 
     def __init__(self):
         self.private_key_pem = self.charger_cle_privee()
@@ -41,4 +41,4 @@ class Crypt:
                 label=None
             )
         )
-        return decrypted_message.decode()
+        return decrypted_message.decode('utf-8')

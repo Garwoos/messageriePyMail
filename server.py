@@ -2,6 +2,8 @@ import socket
 from threading import Thread
 import time
 import data_base
+import cryp
+cryp = cryp.Cryp()
 
 class Server:
     def __init__(self, host='localhost', port=5555):
@@ -57,11 +59,20 @@ class Server:
 
 
 def login(client):
-    data = client.recv(1024).decode('utf-8')
+    received_data = client.recv(1024)
+    print(type(received_data))
+
+    # Check if received_data is already bytes, if not, encode it
+    if not isinstance(received_data, bytes):
+        received_data = received_data.encode('utf-8')
+
+    data = cryp.decrypt(received_data)
     print(data.split(';'))
-    print([item for item in data_base.get_users()])
+
+    # Check user login logic
     if data.split(';') in [list(item[:2]) for item in data_base.get_users()]:
-        if data_base.get_users()[[list(item[:2]) for item in data_base.get_users()].index(data.split(';'))][2] == 'True':
+        if data_base.get_users()[[list(item[:2]) for item in data_base.get_users()].index(data.split(';'))][
+            2] == 'True':
             print('Admin logged in')
             return f'True;admin'
         else:
@@ -72,8 +83,9 @@ def login(client):
         return False
 
 
-def send_message( client, message):
-    client.send(message.encode('utf-8'))
+def send_message(client, message):
+    ciphertext = cryp.encrypt(message)
+    client.send(ciphertext)
 
 
 if __name__ == '__main__':

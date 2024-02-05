@@ -1,7 +1,8 @@
 import socket
 import time
 import threading
-
+import cryp
+cryp = cryp.Cryp()
 
 class Client:
     def __init__(self, host='localhost', port=5555):
@@ -28,18 +29,20 @@ class Client:
     def login(self, username, password):
         try:
             self.client.sendto(f"{username};{password}".encode('utf-8'), (self.host, self.port))
-            return self.client.recv(1024).decode('utf-8')
+            return cryp.encrypt(self.client.recv(1024).decode('utf-8'))
         except socket.error as e:
             return f'Failed to send message. Error: {e}'
 
     def send_message(self, message):
         try:
+            message = cryp.encrypt(message)
             self.client.sendto(f"{message}".encode('utf-8'), (self.host, self.port))
         except socket.error as e:
             return f'Failed to send message. Error: {e}'
 
     def get_message(self):
         try:
-            return self.client.recv(1024).decode('utf-8')
+            return cryp.decrypt(self.client.recv(1024).decode('utf-8'))
         except socket.error as e:
             return f'Failed to receive message. Error: {e}'
+
