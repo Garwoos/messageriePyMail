@@ -46,6 +46,7 @@ class Server:
             data = client.recv(1024).decode('utf-8')
             if data:
                 print(data)
+
     def check_version(self, client):
         data = client.recv(1024).decode('utf-8')
         if data == self.version:
@@ -63,6 +64,9 @@ class Server:
         else:
             print('Failed to log in')
             return False
+
+    def send_message(self, client, message):
+        client.send(message.encode('utf-8'))
 
 if __name__ == '__main__':
     data_base.inserer_donnees('users_identifier', 'users', ['id', 'password'])
