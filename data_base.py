@@ -63,6 +63,25 @@ def add_user_group(username, idgroup, message):
     conn.close()
 
 
+def remove_user_from_group(username):
+    """
+    Supprime un utilisateur d'un groupe.
+
+    Parameters:
+        username (str): L'identifiant de l'utilisateur.
+    """
+    conn = sqlite3.connect('bdd.db')
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        DELETE FROM user_groups
+        WHERE username = ?
+    ''', (username,))
+
+    conn.commit()
+    conn.close()
+
+
 def get_user_groups(username):
     """
     Récupère les groupes d'un utilisateur.
