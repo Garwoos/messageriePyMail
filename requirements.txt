@@ -10,3 +10,7 @@ pyqtwebengine>=5.15.4
 
 # Dépendances pour le serveur
 pycryptodome>=3.10.4
+
+cryptography~=42.0.2
+plyer~=2.1.0
+customtkinter~=5.2.2
