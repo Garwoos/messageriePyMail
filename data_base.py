@@ -20,6 +20,7 @@ def add_user(username, password, admin):
     conn.commit()
     conn.close()
 
+
 def add_group(idgroup, group_name):
     """
     Ajoute un groupe à la base de données.
@@ -38,6 +39,7 @@ def add_group(idgroup, group_name):
 
     conn.commit()
     conn.close()
+
 
 def add_user_group(username, idgroup, message):
     """
@@ -58,6 +60,26 @@ def add_user_group(username, idgroup, message):
 
     conn.commit()
     conn.close()
+
+
+def remove_user_from_group(username):
+    """
+    Supprime un utilisateur d'un groupe.
+
+    Parameters:
+        username (str): L'identifiant de l'utilisateur.
+    """
+    conn = sqlite3.connect('bdd.db')
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        DELETE FROM user_groups
+        WHERE username = ?
+    ''', (username,))
+
+    conn.commit()
+    conn.close()
+
 
 def get_user_groups(username):
     """
@@ -86,6 +108,7 @@ def get_user_groups(username):
     conn.close()
     return result
 
+
 def get_users():
     """
     Récupère les utilisateurs.
@@ -104,6 +127,7 @@ def get_users():
     result = cursor.fetchall()
     conn.close()
     return result
+
 
 def get_user(username, password):
     """
@@ -129,6 +153,7 @@ def get_user(username, password):
     conn.close()
     return result
 
+
 def get_group(idgroup):
     """
     Récupère un groupe.
@@ -151,6 +176,7 @@ def get_group(idgroup):
     result = cursor.fetchone()
     conn.close()
     return result
+
 
 def get_user_group(username, idgroup):
     """
