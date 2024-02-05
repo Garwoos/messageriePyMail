@@ -1,5 +1,6 @@
 import sqlite3
 
+
 def add_user(username, password, admin):
     """
     Ajoute un utilisateur à la base de données.
@@ -20,6 +21,7 @@ def add_user(username, password, admin):
     conn.commit()
     conn.close()
 
+
 def add_group(idgroup, group_name):
     """
     Ajoute un groupe à la base de données.
@@ -38,6 +40,7 @@ def add_group(idgroup, group_name):
 
     conn.commit()
     conn.close()
+
 
 def add_user_group(username, idgroup, message):
     """
@@ -58,6 +61,7 @@ def add_user_group(username, idgroup, message):
 
     conn.commit()
     conn.close()
+
 
 def get_user_groups(username):
     """
@@ -86,6 +90,7 @@ def get_user_groups(username):
     conn.close()
     return result
 
+
 def get_users():
     """
     Récupère les utilisateurs.
@@ -104,6 +109,7 @@ def get_users():
     result = cursor.fetchall()
     conn.close()
     return result
+
 
 def get_user(username, password):
     """
@@ -129,6 +135,7 @@ def get_user(username, password):
     conn.close()
     return result
 
+
 def get_group(idgroup):
     """
     Récupère un groupe.
@@ -151,6 +158,7 @@ def get_group(idgroup):
     result = cursor.fetchone()
     conn.close()
     return result
+
 
 def get_user_group(username, idgroup):
     """
