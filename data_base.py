@@ -202,3 +202,26 @@ def get_user_group(username, idgroup):
     result = cursor.fetchone()
     conn.close()
     return result
+
+def get_users_from_group(idgroup):
+    """
+    Récupère les utilisateurs d'un groupe.
+
+    Parameters:
+        idgroup (int): L'identifiant du groupe.
+
+    Returns:
+        list: La liste des utilisateurs du groupe.
+    """
+    conn = sqlite3.connect('bdd.db')
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT username
+        FROM user_groups
+        WHERE idgroup = ?
+    ''', (idgroup,))
+
+    result = cursor.fetchall()
+    conn.close()
+    return result
