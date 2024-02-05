@@ -1,5 +1,14 @@
 from plyer import notification
+import winsound
+import chime
 
+def sound_notification():
+    """
+    Joue un son de notification.
+    """
+    winsound.Beep(440, 1)
+    chime.theme('mario')
+    chime.error()
 
 def send_notification(title, message, timeout):
     """
@@ -19,5 +28,6 @@ def send_notification(title, message, timeout):
         ticker='Nouveau message !',
         toast=False
     )
+    sound_notification()
 
 send_notification('Nouveau message !', 'Vous avez reçu un nouveau message.', 5)

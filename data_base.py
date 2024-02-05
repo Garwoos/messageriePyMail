@@ -1,9 +1,5 @@
 import sqlite3
 
-# Création de la base de données SQLite
-conn = sqlite3.connect('bdd.db')
-cursor = conn.cursor()
-
 def add_user(username, password, admin):
     """
     Ajoute un utilisateur à la base de données.
@@ -13,12 +9,16 @@ def add_user(username, password, admin):
         password (str): Le mot de passe.
         admin (int): Le statut d'administrateur.
     """
+    conn = sqlite3.connect('bdd.db')
+    cursor = conn.cursor()
+
     cursor.execute('''
         INSERT INTO users (username, password, admin)
         VALUES (?, ?, ?)
     ''', (username, password, admin))
 
     conn.commit()
+    conn.close()
 
 def add_group(idgroup, group_name):
     """
@@ -28,12 +28,16 @@ def add_group(idgroup, group_name):
         idgroup (int): L'identifiant du groupe.
         group_name (str): Le nom du groupe.
     """
+    conn = sqlite3.connect('bdd.db')
+    cursor = conn.cursor()
+
     cursor.execute('''
         INSERT INTO groups (idgroup, group_name)
         VALUES (?, ?)
     ''', (idgroup, group_name))
 
     conn.commit()
+    conn.close()
 
 def add_user_group(username, idgroup, message):
     """
@@ -44,12 +48,16 @@ def add_user_group(username, idgroup, message):
         idgroup (int): L'identifiant du groupe.
         message (str): Le message.
     """
+    conn = sqlite3.connect('bdd.db')
+    cursor = conn.cursor()
+
     cursor.execute('''
         INSERT INTO user_groups (username, idgroup, message)
         VALUES (?, ?, ?)
     ''', (username, idgroup, message))
 
     conn.commit()
+    conn.close()
 
 def get_user_groups(username):
     """
@@ -61,6 +69,9 @@ def get_user_groups(username):
     Returns:
         list: La liste des groupes de l'utilisateur.
     """
+    conn = sqlite3.connect('bdd.db')
+    cursor = conn.cursor()
+
     cursor.execute('''
         SELECT idgroup, group_name
         FROM groups
@@ -71,7 +82,9 @@ def get_user_groups(username):
         )
     ''', (username,))
 
-    return cursor.fetchall()
+    result = cursor.fetchall()
+    conn.close()
+    return result
 
 def get_users():
     """
@@ -80,12 +93,17 @@ def get_users():
     Returns:
         list: La liste des utilisateurs.
     """
+    conn = sqlite3.connect('bdd.db')
+    cursor = conn.cursor()
+
     cursor.execute('''
         SELECT username, password, admin
         FROM users
     ''')
 
-    return cursor.fetchall()
+    result = cursor.fetchall()
+    conn.close()
+    return result
 
 def get_user(username, password):
     """
@@ -98,13 +116,18 @@ def get_user(username, password):
     Returns:
         tuple: L'utilisateur.
     """
+    conn = sqlite3.connect('bdd.db')
+    cursor = conn.cursor()
+
     cursor.execute('''
         SELECT username, admin
         FROM users
         WHERE username = ? AND password = ?
     ''', (username, password))
 
-    return cursor.fetchone()
+    result = cursor.fetchone()
+    conn.close()
+    return result
 
 def get_group(idgroup):
     """
@@ -116,13 +139,18 @@ def get_group(idgroup):
     Returns:
         tuple: Le groupe.
     """
+    conn = sqlite3.connect('bdd.db')
+    cursor = conn.cursor()
+
     cursor.execute('''
         SELECT idgroup, group_name
         FROM groups
         WHERE idgroup = ?
     ''', (idgroup,))
 
-    return cursor.fetchone()
+    result = cursor.fetchone()
+    conn.close()
+    return result
 
 def get_user_group(username, idgroup):
     """
@@ -135,10 +163,15 @@ def get_user_group(username, idgroup):
     Returns:
         tuple: L'utilisateur dans le groupe.
     """
+    conn = sqlite3.connect('bdd.db')
+    cursor = conn.cursor()
+
     cursor.execute('''
         SELECT username, idgroup, message
         FROM user_groups
         WHERE username = ? AND idgroup = ?
     ''', (username, idgroup))
 
-    return cursor.fetchone()
+    result = cursor.fetchone()
+    conn.close()
+    return result
