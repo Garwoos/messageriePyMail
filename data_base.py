@@ -4,20 +4,19 @@ import sqlite3
 conn = sqlite3.connect('bdd.db')
 cursor = conn.cursor()
 
-def add_user(iduser, username, password, admin):
+def add_user(username, password, admin):
     """
     Ajoute un utilisateur à la base de données.
 
     Parameters:
-        iduser (int): L'identifiant de l'utilisateur.
         username (str): Le nom d'utilisateur.
         password (str): Le mot de passe.
         admin (int): Le statut d'administrateur.
     """
     cursor.execute('''
-        INSERT INTO users (iduser, username, password, admin)
-        VALUES (?, ?, ?, ?)
-    ''', (iduser, username, password, admin))
+        INSERT INTO users (username, password, admin)
+        VALUES (?, ?, ?)
+    ''', (username, password, admin))
 
     conn.commit()
 
@@ -36,28 +35,28 @@ def add_group(idgroup, group_name):
 
     conn.commit()
 
-def add_user_group(iduser, idgroup, message):
+def add_user_group(username, idgroup, message):
     """
     Ajoute un utilisateur à un groupe.
 
     Parameters:
-        iduser (int): L'identifiant de l'utilisateur.
+        username (TEXT): L'identifiant de l'utilisateur.
         idgroup (int): L'identifiant du groupe.
         message (str): Le message.
     """
     cursor.execute('''
-        INSERT INTO user_groups (iduser, idgroup, message)
+        INSERT INTO user_groups (username, idgroup, message)
         VALUES (?, ?, ?)
-    ''', (iduser, idgroup, message))
+    ''', (username, idgroup, message))
 
     conn.commit()
 
-def get_user_groups(iduser):
+def get_user_groups(username):
     """
     Récupère les groupes d'un utilisateur.
 
     Parameters:
-        iduser (int): L'identifiant de l'utilisateur.
+        username (str): L'identifiant de l'utilisateur.
 
     Returns:
         list: La liste des groupes de l'utilisateur.
@@ -68,9 +67,9 @@ def get_user_groups(iduser):
         WHERE idgroup IN (
             SELECT idgroup
             FROM user_groups
-            WHERE iduser = ?
+            WHERE username = ?
         )
-    ''', (iduser,))
+    ''', (username,))
 
     return cursor.fetchall()
 
@@ -82,27 +81,28 @@ def get_users():
         list: La liste des utilisateurs.
     """
     cursor.execute('''
-        SELECT iduser, username, admin
+        SELECT username, admin
         FROM users
     ''')
 
     return cursor.fetchall()
 
-def get_user(iduser):
+def get_user(username, password):
     """
     Récupère un utilisateur.
 
     Parameters:
-        iduser (int): L'identifiant de l'utilisateur.
+        username (str): Le nom d'utilisateur.
+        password (str): Le mot de passe.
 
     Returns:
         tuple: L'utilisateur.
     """
     cursor.execute('''
-        SELECT iduser, username, password, admin
+        SELECT username, admin
         FROM users
-        WHERE iduser = ?
-    ''', (iduser,))
+        WHERE username = ? AND password = ?
+    ''', (username, password))
 
     return cursor.fetchone()
 
@@ -124,21 +124,21 @@ def get_group(idgroup):
 
     return cursor.fetchone()
 
-def get_user_group(iduser, idgroup):
+def get_user_group(username, idgroup):
     """
     Récupère un utilisateur dans un groupe.
 
     Parameters:
-        iduser (int): L'identifiant de l'utilisateur.
+        username (str): L'identifiant de l'utilisateur.
         idgroup (int): L'identifiant du groupe.
 
     Returns:
         tuple: L'utilisateur dans le groupe.
     """
     cursor.execute('''
-        SELECT iduser, idgroup, message
+        SELECT username, idgroup, message
         FROM user_groups
-        WHERE iduser = ? AND idgroup = ?
-    ''', (iduser, idgroup))
+        WHERE username = ? AND idgroup = ?
+    ''', (username, idgroup))
 
     return cursor.fetchone()
