@@ -59,8 +59,12 @@ class Server:
 
 
 def login(client):
-    received_data = client.recv(1024)
-    print(type(received_data))
+    received_data = b''
+
+    # Receive data in a loop until the entire message is received
+    while chunk := client.recv(1024):
+        chunk = client.recv(1024)
+        received_data += chunk
 
     # Check if received_data is already bytes, if not, encode it
     if not isinstance(received_data, bytes):
