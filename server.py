@@ -3,7 +3,6 @@ from threading import Thread
 import time
 import data_base
 
-
 class Server:
     def __init__(self, host='localhost', port=5555):
         self.host = host
@@ -54,7 +53,7 @@ class Server:
 
     def login(self, client):
         data = client.recv(1024).decode('utf-8')
-        if (data.split(';')) in [list(item) for item in data_base.recuperer_donnees('users_identifier', 'users')]:
+        if (data.split(';')) in [item for item in data_base.get_users()]:
             print('User logged in')
             return True
         else:
