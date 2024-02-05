@@ -1,5 +1,6 @@
 from plyer import notification
 
+
 def send_notification(title, message, timeout):
     """
     Envoie une notification.
@@ -18,3 +19,5 @@ def send_notification(title, message, timeout):
         ticker='Nouveau message !',
         toast=False
     )
+
+    send_notification('Nouveau message !', 'Vous avez reçu un nouveau message.', 5)
