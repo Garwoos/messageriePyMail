@@ -3,6 +3,7 @@ from threading import Thread
 import time
 import data_base
 
+data_base.remove_user_from_group('user')
 class Server:
     def __init__(self, host='localhost', port=5555):
         self.host = host
@@ -33,20 +34,35 @@ class Server:
             client.close()
         while True:
             data = login(client).split(';')
-            if data == ['True', 'admin']:
+            if data[:2] == ['True', 'admin']:
                 client.send(b'True;admin')
                 break
-            elif data == ['True', 'user']:
+            elif data[:2] == ['True', 'user']:
                 client.send(b'True;user')
                 break
             else:
                 client.send(b'False')
-
+        print(data)
+        username = data[2]
+        self.clients[username] = client
+        print(f'Logged in as {username}')
+        print(self.clients)
+        data_base.add_user_group(username, 1)  # Ajouter l'utilisateur au groupe principal
         while True:
             data = client.recv(1024).decode('utf-8')
             if data:
-                print(data)
-                send_message(client, 'Message received')
+                print(f"{username} : {data}")
+                self.send_message_to_groupe(f'{username} : {data}', 1)
+
+    def send_message_to_groupe(self, message, group_id):
+        print(f'{data_base.get_users_from_group(group_id)}')
+        for user_tuple in data_base.get_users_from_group(group_id):
+            user = user_tuple[0]
+            print(user)
+            if user in self.clients:
+                self.send_message(self.clients[user], message)
+            else:
+                print(f'User {user} not connected')
 
     def check_version(self, client):
         data = client.recv(1024).decode('utf-8')
@@ -55,25 +71,25 @@ class Server:
         else:
             return False
 
+    def send_message(self,client, message):
+        client.send(message.encode('utf-8'))
+
 
 def login(client):
     data = client.recv(1024).decode('utf-8')
     print(data.split(';'))
     print([item for item in data_base.get_users()])
     if data.split(';') in [list(item[:2]) for item in data_base.get_users()]:
-        if data_base.get_users()[[list(item[:2]) for item in data_base.get_users()].index(data.split(';'))][2] == 'True':
+        if data_base.get_users()[[list(item[:2]) for item in data_base.get_users()].index(data.split(';'))][
+                    2] == 'True':
             print('Admin logged in')
-            return f'True;admin'
+            return f'True;admin;{data.split(";")[0]}'
         else:
             print('User logged in')
-            return f'True;user'
+            return f'True;user;{data.split(";")[0]}'
     else:
         print('Failed to log in')
         return False
-
-
-def send_message( client, message):
-    client.send(message.encode('utf-8'))
 
 
 if __name__ == '__main__':

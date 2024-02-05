@@ -3,6 +3,7 @@ from tkinter import messagebox
 import time
 import threading
 import client
+import notif
 
 password = b'password'
 client = client.Client()
@@ -35,7 +36,6 @@ class Application(tk.Frame):
     def send_message(self):
         message = self.input.get()
         self.input.delete(0, tk.END)
-        self.print_message(f"vous : {message}")
         client.send_message(message)
         print('Message sent')
 
@@ -118,9 +118,16 @@ def get_message():
     while True:
         data = client.get_message()
         if data:
-            app.print_message(f"server : {data}")
+            app.print_message(f"{data}")
             time.sleep(1)
 
+
+def is_window_focused(self):
+    focused_widget = self.master.focus_get()
+    if focused_widget is None:
+        return False
+    else:
+        return True
 
 
 if __name__ == '__main__':
