@@ -32,7 +32,7 @@ class Server:
             client.send(b'False')
             client.close()
         while True:
-            if self.login(client):
+            if login(client):
                 client.send(b'True')
                 break
             else:
@@ -42,7 +42,7 @@ class Server:
             data = client.recv(1024).decode('utf-8')
             if data:
                 print(data)
-                self.send_message(client, 'Message received')
+                send_message(client, 'Message received')
 
     def check_version(self, client):
         data = client.recv(1024).decode('utf-8')
@@ -51,17 +51,22 @@ class Server:
         else:
             return False
 
-    def login(self, client):
-        data = client.recv(1024).decode('utf-8')
-        if (data.split(';')) in [item for item in data_base.get_users()]:
-            print('User logged in')
-            return True
-        else:
-            print('Failed to log in')
-            return False
 
-    def send_message(self, client, message):
-        client.send(message.encode('utf-8'))
+def login(client):
+    data = client.recv(1024).decode('utf-8')
+    print(data.split(';'))
+    print([item for item in data_base.get_users()])
+    if data.split(';') in [list(item) for item in data_base.get_users()]:
+        print('User logged in')
+        return True
+    else:
+        print('Failed to log in')
+        return False
+
+
+def send_message( client, message):
+    client.send(message.encode('utf-8'))
+
 
 if __name__ == '__main__':
     server = Server()

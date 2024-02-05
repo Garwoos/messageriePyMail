@@ -9,7 +9,7 @@ cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (
         username TEXT NOT NULL PRIMARY KEY,
         password TEXT NOT NULL,
-        admin INTEGER NOT NULL
+        admin TEXT NOT NULL
     )
 ''')
 
