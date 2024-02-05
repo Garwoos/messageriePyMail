@@ -8,13 +8,13 @@ def add_user(username, password, admin):
     Parameters:
         username (str): Le nom d'utilisateur.
         password (str): Le mot de passe.
-        admin (int): Le statut d'administrateur.
+        admin (str): Le statut d'administrateur.
     """
     conn = sqlite3.connect('bdd.db')
     cursor = conn.cursor()
 
     cursor.execute('''
-        INSERT INTO users (username, password, admin)
+        INSERT OR IGNORE INTO users (username, password, admin)
         VALUES (?, ?, ?)
     ''', (username, password, admin))
 
@@ -42,22 +42,21 @@ def add_group(idgroup, group_name):
     conn.close()
 
 
-def add_user_group(username, idgroup, message):
+def add_user_group(username, idgroup):
     """
     Ajoute un utilisateur à un groupe.
 
     Parameters:
         username (TEXT): L'identifiant de l'utilisateur.
         idgroup (int): L'identifiant du groupe.
-        message (str): Le message.
     """
     conn = sqlite3.connect('bdd.db')
     cursor = conn.cursor()
 
     cursor.execute('''
-        INSERT INTO user_groups (username, idgroup, message)
-        VALUES (?, ?, ?)
-    ''', (username, idgroup, message))
+        INSERT INTO user_groups (username, idgroup)
+        VALUES (?, ?)
+    ''', (username, idgroup))
 
     conn.commit()
     conn.close()
@@ -157,7 +156,7 @@ def get_user(username, password):
 
 def get_group(idgroup):
     """
-    Récupère un groupe.
+    Récupère les utilisateur du groupe.
 
     Parameters:
         idgroup (int): L'identifiant du groupe.

@@ -3,7 +3,6 @@ from threading import Thread
 import time
 import data_base
 
-data_base.remove_user_from_group('user')
 class Server:
     def __init__(self, host='localhost', port=5555):
         self.host = host
@@ -47,7 +46,7 @@ class Server:
         self.clients[username] = client
         print(f'Logged in as {username}')
         print(self.clients)
-        data_base.add_user_group(username, 1)  # Ajouter l'utilisateur au groupe principal
+        data_base.add_user_group(f'{username}', 1)  # Ajouter l'utilisateur au groupe principal
         while True:
             data = client.recv(1024).decode('utf-8')
             if data:
