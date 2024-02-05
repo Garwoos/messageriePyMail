@@ -1,0 +1,33 @@
+import socket
+import time
+
+
+class Client:
+    def __init__(self, host='localhost', port=5555):
+        self.host = host
+        self.port = port
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.version = "1.0"
+
+    def connect_to_server(self):
+        try:
+            self.client.connect((self.host, self.port))
+            print(f'Connected to server {self.host}:{self.port}')
+            return True
+        except socket.error as e:
+            return f'Failed to connect to server {self.host}:{self.port}. Error: {e}'
+
+    def send_version(self):
+        try:
+            self.client.sendto(f"{self.version}".encode('utf-8'), (self.host, self.port))
+            return self.client.recv(1024)
+        except socket.error as e:
+            return f'Failed to send message. Error: {e}'
+
+    def login(self, username, password):
+        try:
+            self.client.sendto(f"{username};{password}".encode('utf-8'), (self.host, self.port))
+            return self.client.recv(1024).decode('utf-8')
+        except socket.error as e:
+            return f'Failed to send message. Error: {e}'
+
