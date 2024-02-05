@@ -1,73 +1,144 @@
 import sqlite3
 
+# Création de la base de données SQLite
+conn = sqlite3.connect('bdd.db')
+cursor = conn.cursor()
 
-def creer_base_de_donnees(nom_base_de_donnees, nom_table, colonnes):
-    # Connexion à la base de données (le fichier sera créé s'il n'existe pas)
-    conn = sqlite3.connect(nom_base_de_donnees)
+def add_user(iduser, username, password, admin):
+    """
+    Ajoute un utilisateur à la base de données.
 
-    # Création d'un objet curseur pour exécuter des requêtes SQL
-    cursor = conn.cursor()
+    Parameters:
+        iduser (int): L'identifiant de l'utilisateur.
+        username (str): Le nom d'utilisateur.
+        password (str): Le mot de passe.
+        admin (int): Le statut d'administrateur.
+    """
+    cursor.execute('''
+        INSERT INTO users (iduser, username, password, admin)
+        VALUES (?, ?, ?, ?)
+    ''', (iduser, username, password, admin))
 
-    # Création de la table
-    create_table_query = f'''
-        CREATE TABLE IF NOT EXISTS {nom_table} (
-            {', '.join(colonnes)}
+    conn.commit()
+
+def add_group(idgroup, group_name):
+    """
+    Ajoute un groupe à la base de données.
+
+    Parameters:
+        idgroup (int): L'identifiant du groupe.
+        group_name (str): Le nom du groupe.
+    """
+    cursor.execute('''
+        INSERT INTO groups (idgroup, group_name)
+        VALUES (?, ?)
+    ''', (idgroup, group_name))
+
+    conn.commit()
+
+def add_user_group(iduser, idgroup, message):
+    """
+    Ajoute un utilisateur à un groupe.
+
+    Parameters:
+        iduser (int): L'identifiant de l'utilisateur.
+        idgroup (int): L'identifiant du groupe.
+        message (str): Le message.
+    """
+    cursor.execute('''
+        INSERT INTO user_groups (iduser, idgroup, message)
+        VALUES (?, ?, ?)
+    ''', (iduser, idgroup, message))
+
+    conn.commit()
+
+def get_user_groups(iduser):
+    """
+    Récupère les groupes d'un utilisateur.
+
+    Parameters:
+        iduser (int): L'identifiant de l'utilisateur.
+
+    Returns:
+        list: La liste des groupes de l'utilisateur.
+    """
+    cursor.execute('''
+        SELECT idgroup, group_name
+        FROM groups
+        WHERE idgroup IN (
+            SELECT idgroup
+            FROM user_groups
+            WHERE iduser = ?
         )
-    '''
-    cursor.execute(create_table_query)
+    ''', (iduser,))
 
-    # Validation des changements et fermeture de la connexion
-    conn.commit()
-    conn.close()
+    return cursor.fetchall()
 
+def get_users():
+    """
+    Récupère les utilisateurs.
 
-def inserer_donnees(nom_base_de_donnees, nom_table, donnees):
-    # Connexion à la base de données
-    conn = sqlite3.connect(nom_base_de_donnees)
+    Returns:
+        list: La liste des utilisateurs.
+    """
+    cursor.execute('''
+        SELECT iduser, username, admin
+        FROM users
+    ''')
 
-    # Création d'un objet curseur pour exécuter des requêtes SQL
-    cursor = conn.cursor()
+    return cursor.fetchall()
 
-    # Insertion des données
-    insert_query = f'INSERT INTO {nom_table} VALUES ({", ".join(["?" for _ in donnees])})'
-    cursor.execute(insert_query, donnees)
+def get_user(iduser):
+    """
+    Récupère un utilisateur.
 
-    # Validation des changements et fermeture de la connexion
-    conn.commit()
-    conn.close()
+    Parameters:
+        iduser (int): L'identifiant de l'utilisateur.
 
+    Returns:
+        tuple: L'utilisateur.
+    """
+    cursor.execute('''
+        SELECT iduser, username, password, admin
+        FROM users
+        WHERE iduser = ?
+    ''', (iduser,))
 
-def recuperer_donnees(nom_base_de_donnees, nom_table):
-    # Connexion à la base de données
-    conn = sqlite3.connect(nom_base_de_donnees)
+    return cursor.fetchone()
 
-    # Création d'un objet curseur pour exécuter des requêtes SQL
-    cursor = conn.cursor()
+def get_group(idgroup):
+    """
+    Récupère un groupe.
 
-    # Récupération de toutes les données de la table
-    select_query = f'SELECT * FROM {nom_table}'
-    cursor.execute(select_query)
+    Parameters:
+        idgroup (int): L'identifiant du groupe.
 
-    # Récupération des résultats
-    resultats = cursor.fetchall()
+    Returns:
+        tuple: Le groupe.
+    """
+    cursor.execute('''
+        SELECT idgroup, group_name
+        FROM groups
+        WHERE idgroup = ?
+    ''', (idgroup,))
 
-    # Fermeture de la connexion
-    conn.close()
+    return cursor.fetchone()
 
-    return resultats
+def get_user_group(iduser, idgroup):
+    """
+    Récupère un utilisateur dans un groupe.
 
+    Parameters:
+        iduser (int): L'identifiant de l'utilisateur.
+        idgroup (int): L'identifiant du groupe.
 
-def delete_table(nom_base_de_donnees, nom_table):
-    # Connexion à la base de données
-    conn = sqlite3.connect(nom_base_de_donnees)
+    Returns:
+        tuple: L'utilisateur dans le groupe.
+    """
+    cursor.execute('''
+        SELECT iduser, idgroup, message
+        FROM user_groups
+        WHERE iduser = ? AND idgroup = ?
+    ''', (iduser, idgroup))
 
-    # Création d'un objet curseur pour exécuter des requêtes SQL
-    cursor = conn.cursor()
-
-    # Suppression de la table
-    delete_table_query = f'DROP TABLE {nom_table}'
-    cursor.execute(delete_table_query)
-
-    # Validation des changements et fermeture de la connexion
-    conn.commit()
-    conn.close()
+    return cursor.fetchone()
