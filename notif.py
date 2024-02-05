@@ -30,4 +30,5 @@ def send_notification(title, message, timeout):
     )
     sound_notification()
 
+print(chime.themes())
 send_notification('Nouveau message !', 'Vous avez reçu un nouveau message.', 5)
