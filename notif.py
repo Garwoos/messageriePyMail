@@ -20,4 +20,4 @@ def send_notification(title, message, timeout):
         toast=False
     )
 
-    send_notification('Nouveau message !', 'Vous avez reçu un nouveau message.', 5)
+send_notification('Nouveau message !', 'Vous avez reçu un nouveau message.', 5)

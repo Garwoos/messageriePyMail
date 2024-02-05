@@ -7,8 +7,7 @@ cursor = conn.cursor()
 # Création de la table "users"
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (
-        iduser INTEGER PRIMARY KEY,
-        username TEXT NOT NULL,
+        username TEXT NOT NULL PRIMARY KEY,
         password TEXT NOT NULL,
         admin INTEGER NOT NULL
     )
@@ -25,17 +24,19 @@ cursor.execute('''
 # Création de la table "user_groups"
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS user_groups (
-        iduser INTEGER,
+        username TEXT NOT NULL,
         idgroup INTEGER,
         message TEXT,
-        PRIMARY KEY (iduser, idgroup),
-        FOREIGN KEY (iduser) REFERENCES users(iduser),
+        PRIMARY KEY (username, idgroup),
+        FOREIGN KEY (username) REFERENCES users(username),
         FOREIGN KEY (idgroup) REFERENCES groups(idgroup)
     )
 ''')
+
 
 # Enregistrement des modifications
 conn.commit()
 
 # Fermeture de la connexion
 conn.close()
+
