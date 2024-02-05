@@ -10,12 +10,15 @@ client = client.Client()
 
 connected = False
 
+channels = ["main", "test"]
+
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
         self.pack()
         self.create_widgets()
+        self.channel = tk.StringVar()
 
     def create_widgets(self):
         self.input = tk.Entry(self)
@@ -30,8 +33,10 @@ class Application(tk.Frame):
         self.message_box.config(state=tk.DISABLED)
         self.message_box.grid(row=0, column=0, columnspan=4)
 
-        self.button_label = tk.Label(self)
-        self.button_label.grid(row=0, column=4)
+        self.channel_list = tk.Listbox(self)
+        self.channel_list.grid(row=0, column=5, rowspan=2, sticky='ns')
+        for channel in channels:
+            self.channel_list.insert(tk.END, channel)
 
     def send_message(self):
         message = self.input.get()
@@ -119,6 +124,8 @@ def get_message():
         data = client.get_message()
         if data:
             app.print_message(f"{data}")
+            if not is_window_focused(root):
+                notif.send_notification('New message', f"{data}")
             time.sleep(1)
 
 
@@ -143,5 +150,4 @@ if __name__ == '__main__':
         app.mainloop()
     if connected:
         app = Application(master=root)
-
         app.mainloop()

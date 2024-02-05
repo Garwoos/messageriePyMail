@@ -2,8 +2,7 @@ import socket
 from threading import Thread
 import time
 import data_base
-import cryp
-cryp = cryp.Cryp()
+
 
 class Server:
     def __init__(self, host='localhost', port=5555):
@@ -77,18 +76,7 @@ class Server:
 
 
 def login(client):
-    received_data = b''
-
-    # Receive data in a loop until the entire message is received
-    while chunk := client.recv(1024):
-        chunk = client.recv(1024)
-        received_data += chunk
-
-    # Check if received_data is already bytes, if not, encode it
-    if not isinstance(received_data, bytes):
-        received_data = received_data.encode('utf-8')
-
-    data = cryp.decrypt(received_data)
+    data = client.recv(1024).decode('utf-8')
     print(data.split(';'))
 
     # Check user login logic
