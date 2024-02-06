@@ -202,6 +202,7 @@ def get_user_group(username, idgroup):
     conn.close()
     return result
 
+
 def get_users_from_group(idgroup):
     """
     Récupère les utilisateurs d'un groupe.

@@ -57,7 +57,7 @@ class Server:
                 break
             if data:
                 print(f"{username} : {data}")
-                data_base.new_message(username, data, data)
+                data_base.new_message(username, 1, data)
                 self.send_message_to_groupe(f'{username} : {data}', 1)
             else:
                 print(f'{username} disconnected')
@@ -70,7 +70,7 @@ class Server:
             user = user_tuple[0]
             print(user)
             if user in self.clients:
-                self.send_message(self.clients[user], message)
+                self.clients[user].send(message.encode('utf-8'))
             else:
                 print(f'User {user} not connected')
 
@@ -81,8 +81,10 @@ class Server:
         else:
             return False
 
-    def send_message(self, client, message):
-        client.send(message.encode('utf-8'))
+    def send_message_history(self, message):
+        if message == 'get_message_history':
+            message = message.split(';')
+            data = data_base.get_messages_from_group(message[1])
 
 
 def login(client):
