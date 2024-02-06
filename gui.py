@@ -124,8 +124,8 @@ def get_message():
         data = client.get_message()
         if data:
             app.print_message(f"{data}")
-            if not is_window_focused(root):
-                notif.send_notification('New message', f"{data}")
+            if not is_window_focused(app):
+                notif.send_notification('New message', f"{data}", 5)
             time.sleep(1)
 
 

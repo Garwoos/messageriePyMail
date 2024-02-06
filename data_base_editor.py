@@ -1,6 +1,7 @@
 import tkinter as tk
 import data_base
 
+
 class DataBaseEditor(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -52,11 +53,12 @@ class InterfaceAddUserGroup(tk.Frame):
         data_base.add_user_group(
             self.entry_add_user_group_username.get(),
             self.entry_add_user_group_idgroup.get(),
-            self.entry_add_user_group_message.get()
+
         )
         self.entry_add_user_group_username.delete(0, "end")
         self.entry_add_user_group_idgroup.delete(0, "end")
         self.entry_add_user_group_message.delete(0, "end")
+
 
 class InterfaceAddGroup(tk.Frame):
     def __init__(self, master):
