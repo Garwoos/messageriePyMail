@@ -30,4 +30,6 @@ def send_notification(title, message, timeout):
     )
     sound_notification()
 
-send_notification('Nouveau message !', 'Vous avez reçu un nouveau message.', 5)
+
+if __name__ == '__main__':
+    send_notification('Nouveau message !', 'Vous avez reçu un nouveau message.', 5)
