@@ -34,7 +34,7 @@ def add_group(idgroup, group_name):
     cursor = conn.cursor()
 
     cursor.execute('''
-        INSERT INTO groups (idgroup, group_name)
+        INSERT OR IGNORE INTO groups (idgroup, group_name)
         VALUES (?, ?)
     ''', (idgroup, group_name))
 
@@ -54,7 +54,7 @@ def add_user_group(username, idgroup):
     cursor = conn.cursor()
 
     cursor.execute('''
-        INSERT INTO user_groups (username, idgroup)
+        INSERT OR IGNORE INTO user_groups (username, idgroup)
         VALUES (?, ?)
     ''', (username, idgroup))
 
@@ -249,6 +249,7 @@ def get_messages_from_group(idgroup):
     conn.close()
     return result
 
+
 def new_message(username, idgroup, message):
     """
     Ajoute un message à un groupe.
@@ -269,4 +270,3 @@ def new_message(username, idgroup, message):
 
     conn.commit()
     conn.close()
-
