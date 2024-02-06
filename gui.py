@@ -29,8 +29,7 @@ class Application(tk.Frame):
         self.message_box.config(state=tk.DISABLED)
         self.message_box.grid(row=0, column=0, columnspan=4)
 
-        self.button_label = tk.Label(self)
-        self.button_label.grid(row=0, column=4)
+
 
     def send_message(self):
         message = self.input.get()

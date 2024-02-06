@@ -8,7 +8,7 @@ def add_user(username, password, admin):
     Parameters:
         username (str): Le nom d'utilisateur.
         password (str): Le mot de passe.
-        admin (int): Le statut d'administrateur.
+        admin (str): Le statut d'administrateur.
     """
     conn = sqlite3.connect('bdd.db')
     cursor = conn.cursor()
