@@ -49,13 +49,23 @@ class Server:
         print(self.clients)
         data_base.add_user_group(f'{username}', 1)  # Ajouter l'utilisateur au groupe principal
         while True:
-            data = client.recv(1024).decode('utf-8')
+            try:
+                data = client.recv(1024).decode('utf-8')
+            except ConnectionResetError:
+                print(f'{username} disconnected')
+                client.close()
+                break
             if data:
                 print(f"{username} : {data}")
                 self.send_message_to_groupe(f'{username} : {data}', 1)
+            else:
+                print(f'{username} disconnected')
+                client.close()
+                break
 
     def send_message_to_groupe(self, message, group_id):
         print(f'{data_base.get_users_from_group(group_id)}')
+        data_base.new_message(group_id, message)
         for user_tuple in data_base.get_users_from_group(group_id):
             user = user_tuple[0]
             print(user)
@@ -71,7 +81,7 @@ class Server:
         else:
             return False
 
-    def send_message(self,client, message):
+    def send_message(self, client, message):
         client.send(message.encode('utf-8'))
 
 
