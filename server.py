@@ -57,6 +57,7 @@ class Server:
                 break
             if data:
                 print(f"{username} : {data}")
+                data_base.new_message(username, data, data)
                 self.send_message_to_groupe(f'{username} : {data}', 1)
             else:
                 print(f'{username} disconnected')
@@ -65,7 +66,6 @@ class Server:
 
     def send_message_to_groupe(self, message, group_id):
         print(f'{data_base.get_users_from_group(group_id)}')
-        data_base.new_message(group_id, message)
         for user_tuple in data_base.get_users_from_group(group_id):
             user = user_tuple[0]
             print(user)
