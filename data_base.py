@@ -249,3 +249,25 @@ def get_messages_from_group(idgroup):
     result = cursor.fetchall()
     conn.close()
     return result
+
+def new_message(username, idgroup, message):
+    """
+    Ajoute un message à un groupe.
+
+    Parameters:
+        username (str): L'identifiant de l'utilisateur.
+        idgroup (int): L'identifiant du groupe.
+        message (str): Le message.
+    """
+    conn = sqlite3.connect('bdd.db')
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        UPDATE user_groups
+        SET message = ?
+        WHERE username = ? AND idgroup = ?
+    ''', (message, username, idgroup))
+
+    conn.commit()
+    conn.close()
+
