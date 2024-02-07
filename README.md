@@ -33,7 +33,7 @@ MessageriePyMail est une application de messagerie simple implémentée en Pytho
 4. Lancez le client :
 
     ```bash
-    start PyCommChat.exe
+    start gui.py
     ```
 
 ## Utilisation
