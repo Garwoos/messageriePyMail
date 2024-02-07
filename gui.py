@@ -142,7 +142,7 @@ if __name__ == '__main__':
     root = tk.Tk()
     root.protocol("WM_DELETE_WINDOW", on_closing)
     client.connect_to_server()
-    if client.send_version().decode('utf-8') == 'True':
+    if client.send_version() == 'True':
         print('Version sent')
     else:
         print('Failed to send version')

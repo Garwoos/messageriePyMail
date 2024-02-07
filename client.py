@@ -3,7 +3,7 @@ import time
 import threading
 
 class Client:
-    def __init__(self, host='localhost', port=5555):
+    def __init__(self, host='10.0.230.6', port=5555):
         self.host = host
         self.port = port
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -33,7 +33,6 @@ class Client:
 
     def send_message(self, message):
         try:
-            message
             self.client.sendto(f"{message}".encode('utf-8'), (self.host, self.port))
         except socket.error as e:
             return f'Failed to send message. Error: {e}'
