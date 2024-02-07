@@ -3,7 +3,6 @@ from threading import Thread
 import time
 import data_base
 
-
 class Server:
     def __init__(self, host='localhost', port=5555):
         self.host = host
